@@ -3,7 +3,7 @@ import java.util.Scanner;
 public class Cheecken {
     public static final String ITALIC = "\033[3m";
     public static final String RESET = "\033[0m";
-    private static String[] list = new String[100];
+    private static final Task[] list = new Task[100];
     private static int listLength = 0;
 
     private static int echo(String input) {
@@ -20,8 +20,33 @@ public class Cheecken {
             return 1;
         } else if (input.equals("list")) {
             System.out.println("____________________________________________________________");
+            System.out.println("Here are the tasks in your list:");
             for (int i = 0; i < listLength; i++)
-                System.out.println((i + 1) + ": " + list[i]);
+                System.out.println((i + 1) + "." + list[i]);
+            System.out.println("____________________________________________________________");
+            return 2;
+        } else if (input.startsWith("mark")) {
+            String inputIndex = input.substring(5);
+            int listIndex = Integer.parseInt(inputIndex) - 1;
+
+            Task task = list[listIndex];
+            task.mark();
+            String markedMsg = "Nice! I've marked this task as done:\n  " + task;
+
+            System.out.println("____________________________________________________________");
+            System.out.println(markedMsg);
+            System.out.println("____________________________________________________________");
+            return 2;
+        } else if (input.startsWith("unmark")) {
+            String inputIndex = input.substring(7);
+            int listIndex = Integer.parseInt(inputIndex) - 1;
+
+            Task task = list[listIndex];
+            task.unmark();
+            String unmarkedMsg = "OK, I've marked this task as not done yet:\n  " + task;
+
+            System.out.println("____________________________________________________________");
+            System.out.println(unmarkedMsg);
             System.out.println("____________________________________________________________");
             return 2;
         }
@@ -29,8 +54,8 @@ public class Cheecken {
         return 0;
     }
 
-    private static void storeMsg(String entry) {
-        list[listLength] = entry;
+    private static void storeMsg(String task) {
+        list[listLength] = new Task(task);
         listLength++;
     }
 
