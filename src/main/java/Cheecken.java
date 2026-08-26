@@ -1,10 +1,11 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Cheecken {
     public static final String ITALIC = "\033[3m";
     public static final String RESET = "\033[0m";
-    private static final Task[] list = new Task[100];
-    private static int listLength = 0;
+    private static final List<Task> list = new ArrayList<>();
 
     private static int echo(String rawInput) {
         try {
@@ -21,8 +22,8 @@ public class Cheecken {
             } else if (input.equals("list")) {
                 System.out.println("____________________________________________________________");
                 System.out.println("Here are the tasks in your list:");
-                for (int i = 0; i < listLength; i++)
-                    System.out.println((i + 1) + "." + list[i]);
+                for (int i = 0; i < list.size(); i++)
+                    System.out.println((i + 1) + "." + list.get(i));
                 System.out.println("____________________________________________________________");
 
                 return 0;
@@ -30,7 +31,7 @@ public class Cheecken {
                 String inputIndex = input.substring(5);
                 int listIndex = Integer.parseInt(inputIndex) - 1;
 
-                Task task = list[listIndex];
+                Task task = list.get(listIndex);
                 task.mark();
                 String msg = "Nice! I've marked this task as done:\n  " + task;
 
@@ -42,7 +43,7 @@ public class Cheecken {
                 String inputIndex = input.substring(7);
                 int listIndex = Integer.parseInt(inputIndex) - 1;
 
-                Task task = list[listIndex];
+                Task task = list.get(listIndex);
                 task.unmark();
                 String msg = "OK, I've marked this task as not done yet:\n  " + task;
 
@@ -70,7 +71,7 @@ public class Cheecken {
                     String msg = "____________________________________________________________\n" +
                             "Got it. I've added this task:\n" +
                             "  " + newDeadline +
-                            "\nNow you have " + listLength + " tasks in the list.\n" +
+                            "\nNow you have " + list.size() + " tasks in the list.\n" +
                             "____________________________________________________________\n";
                     System.out.println(msg);
 
@@ -103,7 +104,7 @@ public class Cheecken {
                     String msg = "____________________________________________________________\n" +
                             "Got it. I've added this task:\n" +
                             "  " + newEvent +
-                            "\nNow you have " + listLength + " tasks in the list.\n" +
+                            "\nNow you have " + list.size() + " tasks in the list.\n" +
                             "____________________________________________________________\n";
                     System.out.println(msg);
                 } catch (StringIndexOutOfBoundsException e) {
@@ -126,7 +127,7 @@ public class Cheecken {
                     String msg = "____________________________________________________________\n" +
                             "Got it. I've added this task:\n" +
                             "  " + newTodo +
-                            "\nNow you have " + listLength + " tasks in the list.\n" +
+                            "\nNow you have " + list.size() + " tasks in the list.\n" +
                             "____________________________________________________________\n";
                     System.out.println(msg);
                 } catch (StringIndexOutOfBoundsException e) {
@@ -134,6 +135,21 @@ public class Cheecken {
                 }
 
                 return 0;
+            } else if (input.startsWith("delete")) {
+                try {
+                    String inputIndex = input.substring(7);
+                    int listIndex = Integer.parseInt(inputIndex) - 1;
+
+                    Task task = deleteTask(listIndex);
+                    String msg = "Noted. I've removed this task:\n  " + task;
+
+                    System.out.println("____________________________________________________________");
+                    System.out.println(msg);
+                    System.out.println("____________________________________________________________");
+                    return 0;
+                } catch (IndexOutOfBoundsException e) {
+                    throw new CheeckenDeleteException();
+                }
             } else {
                 throw new CheeckenUnknownException();
             }
@@ -145,26 +161,28 @@ public class Cheecken {
 
     private static Todo storeMsg(String task) {
         Todo newTodo = new Todo(task);
-        list[listLength] = newTodo;
-        listLength++;
+        list.add(newTodo);
 
         return newTodo;
     }
 
     private static Deadline storeMsg(String task, String deadline) {
         Deadline newDeadline = new Deadline(task, deadline);
-        list[listLength] = newDeadline;
-        listLength++;
+        list.add(newDeadline);
 
         return newDeadline;
     }
 
     private static Event storeMsg(String task, String startTime, String endTime) {
         Event newEvent = new Event(task, startTime, endTime);
-        list[listLength] = newEvent;
-        listLength++;
+        list.add(newEvent);
+        list.size();
 
         return newEvent;
+    }
+
+    private static Task deleteTask(int taskIndex) {
+        return list.remove(taskIndex);
     }
 
     public static void main(String[] args) {
