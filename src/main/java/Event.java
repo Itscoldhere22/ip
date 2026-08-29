@@ -9,7 +9,7 @@ public class Event extends Task {
     }
 
     public String toString() {
-        return String.format("[E][" + super.toString() +
+        return String.format("[E]" + super.toString() +
                 " (from: " + this.startTime + " to: " + this.endTime + ")");
     }
 }
