@@ -181,3 +181,21 @@
   then the unknown-command error beginning `What do you want?`; `list` must
   show exactly one completed task, `1.[T][X] Keep state`; then print the normal
   farewell.
+
+### 7. Reject command-name prefixes
+
+- **Aim:** Verify that a word beginning with a valid command name, such as
+  `marker`, is not interpreted as the `mark` command.
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Keep boundary\nmarker 1\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Input:**
+
+  ```text
+  todo Keep boundary
+  marker 1
+  list
+  bye
+  ```
+
+- **Expected output:** The todo acknowledgement; then the unknown-command
+  error beginning `What do you want?`; `list` must show exactly one unmarked
+  task, `1.[T][ ] Keep boundary`; then the normal farewell.

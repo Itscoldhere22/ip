@@ -10,7 +10,7 @@ public class Cheecken {
     private static int echo(String rawInput) {
         try {
             String input = rawInput.strip();
-            if (input.equals("bye")) {
+            if (CommandType.BYE.matches(input)) {
                 String byeMsg = """
                         ____________________________________________________________
                         Bye. Hope to see you again soon!
@@ -19,7 +19,7 @@ public class Cheecken {
                 System.out.println(byeMsg);
 
                 return 1;
-            } else if (input.equals("list")) {
+            } else if (CommandType.LIST.matches(input)) {
                 System.out.println("____________________________________________________________");
                 System.out.println("Here are the tasks in your list:");
                 for (int i = 0; i < list.size(); i++)
@@ -27,7 +27,7 @@ public class Cheecken {
                 System.out.println("____________________________________________________________");
 
                 return 0;
-            } else if (input.startsWith("mark")) {
+            } else if (CommandType.MARK.matches(input)) {
                 String inputIndex = input.substring(5);
                 int listIndex = Integer.parseInt(inputIndex) - 1;
 
@@ -39,7 +39,7 @@ public class Cheecken {
                 System.out.println(msg);
                 System.out.println("____________________________________________________________");
                 return 0;
-            } else if (input.startsWith("unmark")) {
+            } else if (CommandType.UNMARK.matches(input)) {
                 String inputIndex = input.substring(7);
                 int listIndex = Integer.parseInt(inputIndex) - 1;
 
@@ -51,7 +51,7 @@ public class Cheecken {
                 System.out.println(msg);
                 System.out.println("____________________________________________________________");
                 return 0;
-            } else if (input.startsWith("deadline")) {
+            } else if (CommandType.DEADLINE.matches(input)) {
                 try {
                     // get task and deadline
                     int forwardSlashIndex = input.indexOf("/");
@@ -79,7 +79,7 @@ public class Cheecken {
                 } catch (StringIndexOutOfBoundsException e) {
                     throw new CheeckenEmptyException("deadline");
                 }
-            } else if (input.startsWith("event")) {
+            } else if (CommandType.EVENT.matches(input)) {
                 try {
                     // get task and start + end time
                     int fromIndex = input.indexOf("/from");
@@ -112,7 +112,7 @@ public class Cheecken {
                 }
 
                 return 0;
-            } else if (input.startsWith("todo")) {
+            } else if (CommandType.TODO.matches(input)) {
                 // get task
                 try {
                     String inputTask = input.substring(5);
@@ -135,7 +135,7 @@ public class Cheecken {
                 }
 
                 return 0;
-            } else if (input.startsWith("delete")) {
+            } else if (CommandType.DELETE.matches(input)) {
                 try {
                     String inputIndex = input.substring(7);
                     int listIndex = Integer.parseInt(inputIndex) - 1;
