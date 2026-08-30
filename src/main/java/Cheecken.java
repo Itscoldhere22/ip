@@ -8,155 +8,106 @@ public class Cheecken {
     private static final List<Task> list = new ArrayList<>();
 
     private static int echo(String rawInput) {
+        String input = rawInput.strip();
+        CommandType command = CommandType.fromInput(input);
         try {
-            String input = rawInput.strip();
-            if (CommandType.BYE.matches(input)) {
-                String byeMsg = """
-                        ____________________________________________________________
-                        Bye. Hope to see you again soon!
-                        ____________________________________________________________
-                        """;
-                System.out.println(byeMsg);
-
-                return 1;
-            } else if (CommandType.LIST.matches(input)) {
-                System.out.println("____________________________________________________________");
-                System.out.println("Here are the tasks in your list:");
-                for (int i = 0; i < list.size(); i++)
-                    System.out.println((i + 1) + "." + list.get(i));
-                System.out.println("____________________________________________________________");
-
-                return 0;
-            } else if (CommandType.MARK.matches(input)) {
-                String inputIndex = input.substring(5);
-                int listIndex = Integer.parseInt(inputIndex) - 1;
-
-                Task task = list.get(listIndex);
-                task.mark();
-                String msg = "Nice! I've marked this task as done:\n  " + task;
-
-                System.out.println("____________________________________________________________");
-                System.out.println(msg);
-                System.out.println("____________________________________________________________");
-                return 0;
-            } else if (CommandType.UNMARK.matches(input)) {
-                String inputIndex = input.substring(7);
-                int listIndex = Integer.parseInt(inputIndex) - 1;
-
-                Task task = list.get(listIndex);
-                task.unmark();
-                String msg = "OK, I've marked this task as not done yet:\n  " + task;
-
-                System.out.println("____________________________________________________________");
-                System.out.println(msg);
-                System.out.println("____________________________________________________________");
-                return 0;
-            } else if (CommandType.DEADLINE.matches(input)) {
-                try {
-                    // get task and deadline
-                    int forwardSlashIndex = input.indexOf("/");
-                    if (forwardSlashIndex == -1) {
-                        throw new CheeckenEmptyException(false);
-                    }
-                    String inputTask = input.substring(9, forwardSlashIndex - 1);
-                    String deadline = input.substring(forwardSlashIndex + 4);
-
-                    // check invalid task
-                    if (inputTask.isEmpty()) {
-                        throw new CheeckenEmptyException("deadline");
-                    }
-
-                    // store task and inform user success
-                    Task newDeadline = storeMsg(inputTask, deadline);
-                    String msg = "____________________________________________________________\n" +
-                            "Got it. I've added this task:\n" +
-                            "  " + newDeadline +
-                            "\nNow you have " + list.size() + " tasks in the list.\n" +
-                            "____________________________________________________________\n";
-                    System.out.println(msg);
-
-                    return 0;
-                } catch (StringIndexOutOfBoundsException e) {
-                    throw new CheeckenEmptyException("deadline");
-                }
-            } else if (CommandType.EVENT.matches(input)) {
-                try {
-                    // get task and start + end time
-                    int fromIndex = input.indexOf("/from");
-                    if (fromIndex == -1) {
-                        throw new CheeckenEmptyException(false, false);
-                    }
-                    int toIndex = input.indexOf("/to");
-                    if (toIndex == -1) {
-                        throw new CheeckenEmptyException(true, false);
-                    }
-                    String inputTask = input.substring(6, fromIndex - 1);
-                    String startTime = input.substring(fromIndex + 6, toIndex - 1);
-                    String endTime = input.substring(toIndex + 4);
-
-                    // check invalid task
-                    if (inputTask.isEmpty()) {
-                        throw new CheeckenEmptyException("event");
-                    }
-
-                    // store task and inform user success
-                    Task newEvent = storeMsg(inputTask, startTime, endTime);
-                    String msg = "____________________________________________________________\n" +
-                            "Got it. I've added this task:\n" +
-                            "  " + newEvent +
-                            "\nNow you have " + list.size() + " tasks in the list.\n" +
-                            "____________________________________________________________\n";
-                    System.out.println(msg);
-                } catch (StringIndexOutOfBoundsException e) {
-                    throw new CheeckenEmptyException("event");
-                }
-
-                return 0;
-            } else if (CommandType.TODO.matches(input)) {
-                // get task
-                try {
-                    String inputTask = input.substring(5);
-                    Task newTodo = storeMsg(inputTask);
-
-                    // check invalid task
-                    if (inputTask.isEmpty()) {
-                        throw new CheeckenEmptyException("todo");
-                    }
-
-                    // store task and inform user success
-                    String msg = "____________________________________________________________\n" +
-                            "Got it. I've added this task:\n" +
-                            "  " + newTodo +
-                            "\nNow you have " + list.size() + " tasks in the list.\n" +
-                            "____________________________________________________________\n";
-                    System.out.println(msg);
-                } catch (StringIndexOutOfBoundsException e) {
-                    throw new CheeckenEmptyException("todo");
-                }
-
-                return 0;
-            } else if (CommandType.DELETE.matches(input)) {
-                try {
-                    String inputIndex = input.substring(7);
-                    int listIndex = Integer.parseInt(inputIndex) - 1;
-
-                    Task task = deleteTask(listIndex);
-                    String msg = "Noted. I've removed this task:\n  " + task;
-
-                    System.out.println("____________________________________________________________");
-                    System.out.println(msg);
-                    System.out.println("____________________________________________________________");
-                    return 0;
-                } catch (IndexOutOfBoundsException e) {
-                    throw new CheeckenDeleteException();
-                }
-            } else {
+            if (command == null) {
                 throw new CheeckenUnknownException();
             }
+            return switch (command) {
+            case BYE -> handleBye();
+            case LIST -> handleList();
+            case MARK -> handleMark(input);
+            case UNMARK -> handleUnmark(input);
+            case DEADLINE -> handleDeadline(input);
+            case EVENT -> handleEvent(input);
+            case TODO -> handleTodo(input);
+            case DELETE -> handleDelete(input);
+            };
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return 0;
         }
+    }
+
+    private static int handleBye() {
+        System.out.println("____________________________________________________________\n"
+                + "Bye. Hope to see you again soon!\n"
+                + "____________________________________________________________");
+        return 1;
+    }
+
+    private static int handleList() {
+        System.out.println("____________________________________________________________");
+        System.out.println("Here are the tasks in your list:");
+        for (int i = 0; i < list.size(); i++) {
+            System.out.println((i + 1) + "." + list.get(i));
+        }
+        System.out.println("____________________________________________________________");
+        return 0;
+    }
+
+    private static int handleMark(String input) {
+        Task task = list.get(Integer.parseInt(input.substring(5)) - 1);
+        task.mark();
+        printTaskMessage("Nice! I've marked this task as done:", task);
+        return 0;
+    }
+
+    private static int handleUnmark(String input) {
+        Task task = list.get(Integer.parseInt(input.substring(7)) - 1);
+        task.unmark();
+        printTaskMessage("OK, I've marked this task as not done yet:", task);
+        return 0;
+    }
+
+    private static int handleTodo(String input) {
+        String taskText = input.substring(5);
+        if (taskText.isEmpty()) throw new CheeckenEmptyException("todo");
+        addTask(storeMsg(taskText));
+        return 0;
+    }
+
+    private static int handleDeadline(String input) {
+        int slash = input.indexOf("/");
+        if (slash == -1) throw new CheeckenEmptyException(false);
+        String taskText = input.substring(9, slash - 1);
+        if (taskText.isEmpty()) throw new CheeckenEmptyException("deadline");
+        String deadline = input.substring(slash + 4);
+        addTask(storeMsg(taskText, deadline));
+        return 0;
+    }
+
+    private static int handleEvent(String input) {
+        int from = input.indexOf("/from");
+        int to = input.indexOf("/to");
+        if (from == -1) throw new CheeckenEmptyException(false, false);
+        if (to == -1) throw new CheeckenEmptyException(true, false);
+        String taskText = input.substring(6, from - 1);
+        if (taskText.isEmpty()) throw new CheeckenEmptyException("event");
+        String start = input.substring(from + 6, to - 1);
+        String end = input.substring(to + 4);
+        addTask(storeMsg(taskText, start, end));
+        return 0;
+    }
+
+    private static int handleDelete(String input) {
+        Task task = deleteTask(Integer.parseInt(input.substring(7)) - 1);
+        printTaskMessage("Noted. I've removed this task:", task);
+        return 0;
+    }
+
+    private static void addTask(Task task) {
+        System.out.println("____________________________________________________________\n"
+                + "Got it. I've added this task:\n  " + task
+                + "\nNow you have " + list.size() + " tasks in the list.\n"
+                + "____________________________________________________________");
+    }
+
+    private static void printTaskMessage(String message, Task task) {
+        System.out.println("____________________________________________________________");
+        System.out.println(message + "\n  " + task);
+        System.out.println("____________________________________________________________");
     }
 
     private static Todo storeMsg(String task) {
@@ -176,7 +127,6 @@ public class Cheecken {
     private static Event storeMsg(String task, String startTime, String endTime) {
         Event newEvent = new Event(task, startTime, endTime);
         list.add(newEvent);
-        list.size();
 
         return newEvent;
     }
