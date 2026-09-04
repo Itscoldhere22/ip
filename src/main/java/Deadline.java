@@ -1,28 +1,37 @@
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 public class Deadline extends Task {
-    protected LocalDate deadline;
+    protected LocalDateTime deadline;
+    private final boolean hasTime;
 
     public Deadline(String task, String deadline) {
         super(task);
-        this.deadline = parseDate(deadline);
+        this.hasTime = deadline.trim().contains(" ") || deadline.contains("T");
+        this.deadline = parseDateTime(deadline);
     }
 
-    private static LocalDate parseDate(String value) {
-        try { return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE); }
+    private static LocalDateTime parseDateTime(String value) {
+        try { return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME); }
         catch (DateTimeParseException ignored) { }
-        try { return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm")).toLocalDate(); }
+        try { return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm")); }
         catch (DateTimeParseException ignored) { }
-        throw new IllegalArgumentException("Invalid deadline date. Use yyyy-MM-dd or dd/MM/yyyy HHmm.");
+        try { return LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay(); }
+        catch (DateTimeParseException ignored) { }
+        try { return LocalDateTime.parse(value + "T00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME); }
+        catch (DateTimeParseException ignored) { }
+        throw new IllegalArgumentException("Invalid deadline date. Use yyyy-MM-dd, dd/MM/yyyy, or dd/MM/yyyy HHmm.");
     }
 
     public String toString() {
-        return String.format("[D]" + super.toString() + " (by: "
-                + deadline.format(DateTimeFormatter.ofPattern("MMM dd yyyy")) + ")");
+        String pattern = hasTime ? "MMM dd yyyy h:mm a" : "MMM dd yyyy";
+        return "[D]" + super.toString() + " (by: "
+                + deadline.format(DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH)) + ")";
     }
+
     @Override
     public String toStorageString() {
         return "D | " + (marked ? "1" : "0") + " | " + task + " | " + deadline;
