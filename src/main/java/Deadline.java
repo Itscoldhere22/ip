@@ -23,7 +23,7 @@ public class Deadline extends Task {
         catch (DateTimeParseException ignored) { }
         try { return LocalDateTime.parse(value + "T00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME); }
         catch (DateTimeParseException ignored) { }
-        throw new IllegalArgumentException("Invalid deadline date. Use yyyy-MM-dd, dd/MM/yyyy, or dd/MM/yyyy HHmm.");
+        throw new CheeckenDateTimeException("deadline");
     }
 
     public String toString() {

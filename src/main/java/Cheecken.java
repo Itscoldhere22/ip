@@ -29,6 +29,7 @@ public class Cheecken {
             case DELETE -> handleDelete(input);
             };
         } catch (Exception e) {
+            System.out.println("____________________________________________________________");
             System.out.println(e.getMessage());
             return 0;
         }
@@ -68,6 +69,7 @@ public class Cheecken {
     }
 
     private static int handleTodo(String input) {
+        if (input.length() <= 4) throw new CheeckenEmptyException("todo");
         String taskText = input.substring(5);
         if (taskText.isBlank()) throw new CheeckenEmptyException("todo");
         addTask(storeMsg(taskText));
@@ -76,11 +78,15 @@ public class Cheecken {
 
     private static int handleDeadline(String input) {
         int slash = input.indexOf("/");
-        if (slash == -1) throw new CheeckenEmptyException(false);
-        String taskText = input.substring(9, slash - 1);
-        if (taskText.isBlank() || input.substring(slash + 1).isBlank()) {
+        if (slash == -1) {
+            if (input.substring(8).isBlank()) throw new CheeckenEmptyException("deadline");
+            throw new CheeckenDateTimeException("deadline");
+        }
+        String taskText = input.substring(8, slash).strip();
+        if (taskText.isBlank()) {
             throw new CheeckenEmptyException("deadline");
         }
+        if (input.substring(slash + 3).isBlank()) throw new CheeckenDateTimeException("deadline");
         String deadline = input.substring(slash + 4);
         addTask(storeMsg(taskText, deadline));
         return 0;
@@ -89,15 +95,20 @@ public class Cheecken {
     private static int handleEvent(String input) {
         int from = input.indexOf("/from");
         int to = input.indexOf("/to");
-        if (from == -1) throw new CheeckenEmptyException(false, false);
-        if (to == -1) throw new CheeckenEmptyException(true, false);
-        String taskText = input.substring(6, from - 1);
-        if (taskText.isBlank() || input.substring(from + 5, to).isBlank()
-                || input.substring(to + 3).isBlank()) {
+        if (from == -1) {
+            if (input.substring(5).isBlank()) throw new CheeckenEmptyException("event");
+            throw new CheeckenDateTimeException("event");
+        }
+        String taskText = input.substring(5, from).strip();
+        if (taskText.isBlank()) {
             throw new CheeckenEmptyException("event");
         }
-        String start = input.substring(from + 6, to - 1);
-        String end = input.substring(to + 4);
+        if (to == -1) throw new CheeckenDateTimeException("event");
+        if (input.substring(from + 5, to).isBlank() || input.substring(to + 3).isBlank()) {
+            throw new CheeckenDateTimeException("event");
+        }
+        String start = input.substring(from + 5, to).strip();
+        String end = input.substring(to + 3).strip();
         addTask(storeMsg(taskText, start, end));
         return 0;
     }

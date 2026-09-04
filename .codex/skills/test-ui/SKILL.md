@@ -23,6 +23,9 @@ a failure pass; ask when the plan is ambiguous.
 
 1. Read the whole plan and resolve commands relative to the repository root.
    Use the project’s required runtime (Java 25 for this repository).
+   For tests that require a clean task list, use an isolated temporary working
+   directory with its own empty `data/cheecken.txt`; never overwrite or delete
+   the user’s real persistence file.
 2. Run cases in listed order, capturing stdout and stderr separately. Feed the
    declared input exactly. Unless the plan explicitly states normalization,
    compare output exactly, including whitespace and final newlines.

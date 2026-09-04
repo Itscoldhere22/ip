@@ -230,3 +230,24 @@
 - **Expected output:** The list contains three loaded tasks; `read book` is
   marked done, and the deadline and event are unmarked. No duplicate tasks are
   created before the first command.
+
+### 10. Empty event task
+
+- **Aim:** Reject `event /from /to` as an empty task before datetime parsing.
+- **Input:** `event /from /to`.
+- **Expected output:** `There's no task that is empty. LOCK INNN!` followed by
+  the event example using datetimes.
+
+### 11. Event without datetime
+
+- **Aim:** Reject an event that has a task but no `/from` or `/to` datetime.
+- **Input:** `event love me`.
+- **Expected output:** `No time how I set the task...` followed by the event
+  datetime example.
+
+### 12. Event with datetime
+
+- **Aim:** Parse and display event start/end values using 12-hour time.
+- **Input:** `event love me /from 15/10/2025 0900 /to 15/10/3000 1100`.
+- **Expected output:** `Got it. I've added this task:` followed by
+  `[E][ ] love me (from: Oct 15 2025 9:00 AM to: Oct 15 3000 11:00 AM)`.
