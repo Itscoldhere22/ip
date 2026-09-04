@@ -1,9 +1,11 @@
 public class CheeckenEmptyException extends RuntimeException {
     public CheeckenEmptyException(String task) {
-        super("There's no task that is empty. LOCK INNN!\n" +
-                "(e.g. todo buy her flowers\n" +
-                "      event buying her flowers /from today /to every day\n" +
-                "      deadline buy her flowers /by before she leaves you)");
+        super("There's no task that is empty. LOCK INNN!\n" + switch (task) {
+        case "todo" -> "(e.g. todo buy her flowers)";
+        case "event" -> "(e.g. event love me /from 15/10/2025 0900 /to 15/10/3000 1100)";
+        case "deadline" -> "(e.g. deadline buy her flowers /by 15/10/2025 1800)";
+        default -> "(e.g. todo buy her flowers)";
+        });
     }
 
     public CheeckenEmptyException(boolean by) {
