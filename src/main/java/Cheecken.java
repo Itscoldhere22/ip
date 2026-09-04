@@ -176,6 +176,7 @@ public class Cheecken {
         }
         try {
             for (String line : Files.readAllLines(STORAGE_FILE)) {
+                try {
                 String[] fields = line.split("\\s*\\|\\s*", -1);
                 if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
                     continue;
@@ -200,6 +201,9 @@ public class Cheecken {
                     task.mark();
                 }
                 list.add(task);
+                } catch (RuntimeException ignored) {
+                    // Ignore malformed or legacy records and continue loading.
+                }
             }
         } catch (IOException | SecurityException e) {
             System.out.println("Unable to load tasks: " + e.getMessage());
