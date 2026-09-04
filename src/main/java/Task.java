@@ -15,6 +15,10 @@ public class Task {
         this.marked = false;
     }
 
+    public String toStorageString() {
+        return "T | " + (marked ? "1" : "0") + " | " + task;
+    }
+
     @Override
     public String toString() {
         return String.format("[" + (this.marked ? "X" : " ") + "] " + this.task);

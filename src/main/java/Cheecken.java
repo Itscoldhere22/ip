@@ -1,14 +1,18 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.io.IOException;
 
 public class Cheecken {
     public static final String ITALIC = "\033[3m";
     public static final String RESET = "\033[0m";
     private static final List<Task> list = new ArrayList<>();
+    private static final Path STORAGE_FILE = Path.of("data", "cheecken.txt");
 
     private static int echo(String rawInput) {
-        String input = rawInput.strip();
+        String input = rawInput == null ? "" : rawInput.strip();
         CommandType command = CommandType.fromInput(input);
         try {
             if (command == null) {
@@ -48,22 +52,24 @@ public class Cheecken {
     }
 
     private static int handleMark(String input) {
-        Task task = list.get(Integer.parseInt(input.substring(5)) - 1);
+        Task task = list.get(parseIndex(input, "mark"));
         task.mark();
+        saveTasks();
         printTaskMessage("Nice! I've marked this task as done:", task);
         return 0;
     }
 
     private static int handleUnmark(String input) {
-        Task task = list.get(Integer.parseInt(input.substring(7)) - 1);
+        Task task = list.get(parseIndex(input, "unmark"));
         task.unmark();
+        saveTasks();
         printTaskMessage("OK, I've marked this task as not done yet:", task);
         return 0;
     }
 
     private static int handleTodo(String input) {
         String taskText = input.substring(5);
-        if (taskText.isEmpty()) throw new CheeckenEmptyException("todo");
+        if (taskText.isBlank()) throw new CheeckenEmptyException("todo");
         addTask(storeMsg(taskText));
         return 0;
     }
@@ -72,7 +78,9 @@ public class Cheecken {
         int slash = input.indexOf("/");
         if (slash == -1) throw new CheeckenEmptyException(false);
         String taskText = input.substring(9, slash - 1);
-        if (taskText.isEmpty()) throw new CheeckenEmptyException("deadline");
+        if (taskText.isBlank() || input.substring(slash + 1).isBlank()) {
+            throw new CheeckenEmptyException("deadline");
+        }
         String deadline = input.substring(slash + 4);
         addTask(storeMsg(taskText, deadline));
         return 0;
@@ -84,7 +92,10 @@ public class Cheecken {
         if (from == -1) throw new CheeckenEmptyException(false, false);
         if (to == -1) throw new CheeckenEmptyException(true, false);
         String taskText = input.substring(6, from - 1);
-        if (taskText.isEmpty()) throw new CheeckenEmptyException("event");
+        if (taskText.isBlank() || input.substring(from + 5, to).isBlank()
+                || input.substring(to + 3).isBlank()) {
+            throw new CheeckenEmptyException("event");
+        }
         String start = input.substring(from + 6, to - 1);
         String end = input.substring(to + 4);
         addTask(storeMsg(taskText, start, end));
@@ -92,7 +103,7 @@ public class Cheecken {
     }
 
     private static int handleDelete(String input) {
-        Task task = deleteTask(Integer.parseInt(input.substring(7)) - 1);
+        Task task = deleteTask(parseIndex(input, "delete"));
         printTaskMessage("Noted. I've removed this task:", task);
         return 0;
     }
@@ -113,6 +124,7 @@ public class Cheecken {
     private static Todo storeMsg(String task) {
         Todo newTodo = new Todo(task);
         list.add(newTodo);
+        saveTasks();
 
         return newTodo;
     }
@@ -120,6 +132,7 @@ public class Cheecken {
     private static Deadline storeMsg(String task, String deadline) {
         Deadline newDeadline = new Deadline(task, deadline);
         list.add(newDeadline);
+        saveTasks();
 
         return newDeadline;
     }
@@ -127,15 +140,74 @@ public class Cheecken {
     private static Event storeMsg(String task, String startTime, String endTime) {
         Event newEvent = new Event(task, startTime, endTime);
         list.add(newEvent);
+        saveTasks();
 
         return newEvent;
     }
 
     private static Task deleteTask(int taskIndex) {
-        return list.remove(taskIndex);
+        Task task = list.remove(taskIndex);
+        saveTasks();
+        return task;
+    }
+
+    private static int parseIndex(String input, String command) {
+        String value = input.substring(command.length()).strip();
+        int index = Integer.parseInt(value) - 1;
+        if (index < 0 || index >= list.size()) {
+            throw new IndexOutOfBoundsException("Task index out of range");
+        }
+        return index;
+    }
+
+    private static void saveTasks() {
+        try {
+            Files.createDirectories(STORAGE_FILE.getParent());
+            Files.write(STORAGE_FILE, list.stream().map(Task::toStorageString).toList());
+        } catch (IOException | SecurityException e) {
+            System.out.println("Unable to save tasks: " + e.getMessage());
+        }
+    }
+
+    /** Loads valid persisted tasks when the chatbot starts. */
+    private static void loadTasks() {
+        if (!Files.exists(STORAGE_FILE)) {
+            return;
+        }
+        try {
+            for (String line : Files.readAllLines(STORAGE_FILE)) {
+                String[] fields = line.split("\\s*\\|\\s*", -1);
+                if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
+                    continue;
+                }
+                Task task;
+                switch (fields[0]) {
+                case "T" -> task = new Todo(fields[2]);
+                case "D" -> {
+                    if (fields.length < 4) continue;
+                    task = new Deadline(fields[2], fields[3]);
+                }
+                case "E" -> {
+                    if (fields.length >= 5) {
+                        task = new Event(fields[2], fields[3], fields[4]);
+                    } else {
+                        task = new Event(fields[2], fields[3], "");
+                    }
+                }
+                default -> { continue; }
+                }
+                if ("1".equals(fields[1])) {
+                    task.mark();
+                }
+                list.add(task);
+            }
+        } catch (IOException | SecurityException e) {
+            System.out.println("Unable to load tasks: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
+        loadTasks();
         String welcomeMsg = """
                  _____ _                    _             \s
                 /  __ \\ |                  | |            \s
@@ -151,6 +223,9 @@ public class Cheecken {
         System.out.println(welcomeMsg);
         Scanner scanner = new Scanner(System.in);
         while (true) {
+            if (!scanner.hasNextLine()) {
+                break;
+            }
             String input = scanner.nextLine();
             int echoRes = echo(input);
             if (echoRes == 1)

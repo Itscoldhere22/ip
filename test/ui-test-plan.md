@@ -199,3 +199,34 @@
 - **Expected output:** The todo acknowledgement; then the unknown-command
   error beginning `What do you want?`; `list` must show exactly one unmarked
   task, `1.[T][ ] Keep boundary`; then the normal farewell.
+
+### 8. Persist state-changing commands
+
+- **Aim:** Verify that adding and toggling tasks automatically writes the
+  current list to `data/cheecken.txt`.
+- **Command:** Compile and run the program with `todo read book`, `mark 1`,
+  `unmark 1`, then inspect `data/cheecken.txt`.
+- **Input:** `todo read book`, `mark 1`, `unmark 1`, `bye`.
+- **Expected output:** The file exists and contains exactly:
+
+  ```text
+  T | 0 | read book
+  ```
+
+### 9. Load persisted tasks at startup
+
+- **Aim:** Verify that tasks already present on disk are loaded before the
+  first command is processed, including their completion status.
+- **Setup:** Write the following to `data/cheecken.txt` before launching:
+
+  ```text
+  T | 1 | read book
+  D | 0 | return book | June 6th
+  E | 0 | project meeting | Aug 6th 2-4pm
+  ```
+
+- **Command:** Compile and run `Cheecken`, send `list`, then `bye`.
+- **Input:** `list`, `bye`.
+- **Expected output:** The list contains three loaded tasks; `read book` is
+  marked done, and the deadline and event are unmarked. No duplicate tasks are
+  created before the first command.

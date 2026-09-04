@@ -12,4 +12,8 @@ public class Event extends Task {
         return String.format("[E]" + super.toString() +
                 " (from: " + this.startTime + " to: " + this.endTime + ")");
     }
+    @Override
+    public String toStorageString() {
+        return "E | " + (marked ? "1" : "0") + " | " + task + " | " + startTime + " | " + endTime;
+    }
 }

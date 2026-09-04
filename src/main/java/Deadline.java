@@ -9,4 +9,8 @@ public class Deadline extends Task {
     public String toString() {
         return String.format("[D]" + super.toString() + " (by: " + this.deadline + ")");
     }
+    @Override
+    public String toStorageString() {
+        return "D | " + (marked ? "1" : "0") + " | " + task + " | " + deadline;
+    }
 }
