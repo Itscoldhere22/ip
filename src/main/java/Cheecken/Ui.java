@@ -3,6 +3,7 @@ package Cheecken;
 import java.util.List;
 
 /** Handles all user-facing console output. */
+/** Handles all user-facing console output. */
 public class Ui {
     private static final String SEPARATOR = "____________________________________________________________";
 
@@ -43,3 +44,9 @@ public class Ui {
         System.out.println(exception.getMessage());
     }
 }
+    /** Prints the welcome banner. */
+    /** Prints the farewell message. */
+    /** Prints the current task list. */
+    /** Prints a task-created confirmation. */
+    /** Prints a task status or deletion confirmation. */
+    /** Prints a formatted error message. */

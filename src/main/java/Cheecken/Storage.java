@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Handles loading and saving tasks in the persistence file. */
+/** Loads and saves task records in the application's persistence file. */
 public class Storage {
     private final Path file;
 
@@ -59,3 +60,6 @@ public class Storage {
         return tasks;
     }
 }
+    /** Creates storage backed by the supplied relative or absolute path. */
+    /** Saves all tasks, reporting I/O failures to the user. */
+    /** Loads valid task records and skips malformed records. */

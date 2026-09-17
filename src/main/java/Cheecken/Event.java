@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
+/** Represents a task with a start and end date or date-time. */
 public class Event extends Task {
     protected LocalDateTime startTime;
     protected LocalDateTime endTime;
@@ -63,3 +64,6 @@ public class Event extends Task {
                 + (hasEndTime ? endTime : endTime.toLocalDate());
     }
 }
+    /** Creates an event after parsing its start and end values. */
+    /** Returns the event display representation. */
+    /** Serializes the event task. */

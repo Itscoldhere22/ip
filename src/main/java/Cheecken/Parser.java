@@ -2,6 +2,7 @@ package Cheecken;
 
 /** Converts raw user input into a recognized command. */
 public class Parser {
+    /** Normalizes null-safe raw console input. */
     public String normalize(String rawInput) {
         return rawInput == null ? "" : rawInput.strip();
     }
@@ -16,3 +17,4 @@ public class Parser {
         return null;
     }
 }
+    /** Identifies the command represented by normalized input. */

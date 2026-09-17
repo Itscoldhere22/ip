@@ -1,5 +1,6 @@
 package Cheecken;
 
+/** Represents a task without a deadline or event time. */
 public class Todo extends Task {
     public Todo(String task) {
         super(task);
@@ -13,3 +14,6 @@ public class Todo extends Task {
         return "T | " + (isMarked ? "1" : "0") + " | " + task;
     }
 }
+    /** Creates a todo task. */
+    /** Returns the todo display representation. */
+    /** Serializes the todo task. */

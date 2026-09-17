@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
 /** Shared parsed date/time value for deadlines and events. */
+/** Parsed date-time value that preserves whether a time was explicitly entered. */
 public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MMM dd yyyy", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("MMM dd yyyy h:mm a", Locale.ENGLISH);
@@ -32,3 +33,7 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
     public String display() { return value.format(hasExplicitTime ? TIME : DATE); }
     public String storage() { return hasExplicitTime ? value.toString() : value.toLocalDate().toString(); }
 }
+    /** Parses supported keywords and date formats using the system clock. */
+    /** Parses supported keywords and date formats using a supplied clock. */
+    /** Formats this value for user-facing output. */
+    /** Formats this value for persistence. */

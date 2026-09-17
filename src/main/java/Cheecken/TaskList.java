@@ -31,3 +31,9 @@ public class TaskList {
         return List.copyOf(tasks);
     }
 }
+    /** Creates an empty task list. */
+    /** Adds a task to the list. */
+    /** Returns the task at a zero-based index. */
+    /** Removes and returns the task at a zero-based index. */
+    /** Returns the number of tasks. */
+    /** Returns an immutable snapshot of the tasks. */

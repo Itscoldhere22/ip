@@ -22,7 +22,12 @@ public class Task {
     }
 
     @Override
+    /** Returns the display representation of this task. */
     public String toString() {
         return String.format("[" + (this.isMarked ? "X" : " ") + "] " + this.task);
     }
 }
+    /** Creates an unmarked task with the supplied description. */
+    /** Marks this task as completed. */
+    /** Marks this task as not completed. */
+    /** Serializes this task for persistence. */
