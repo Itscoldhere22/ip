@@ -23,7 +23,19 @@ class CheeckenUiTest {
             Arguments.of("Reject empty event", "event\n", "There's no task that is empty."),
             Arguments.of("Reject event without task", "event /from /to\n", "There's no task that is empty."),
             Arguments.of("Reject event without datetimes", "event love me\n", "No time how I set the task..."),
-            Arguments.of("Add event with 12-hour times", "event love me /from 15/10/2025 0900 /to 15/10/3000 1100\n", "9:00 AM"));
+            Arguments.of("Add event with 12-hour times", "event love me /from 15/10/2025 0900 /to 15/10/3000 1100\n", "9:00 AM"),
+            Arguments.of("Find tasks whose descriptions contain a keyword",
+                "todo read book\ndeadline return book /by 15/10/2025\nfind book\nbye\n",
+                "Here are the matching tasks in your list:\n1.[T][ ] read book\n2.[D][ ] return book"),
+            Arguments.of("Find is case-insensitive",
+                "todo Read Book\nfind book\nbye\n",
+                "1.[T][ ] Read Book"),
+            Arguments.of("Find with no matches reports no matching tasks",
+                "todo buy flowers\nfind book\nbye\n",
+                "There are no matching tasks in your list."),
+            Arguments.of("Find without a keyword is rejected",
+                "todo read book\nfind\nbye\n",
+                "Please provide a keyword to search for."));
     }
 
     @ParameterizedTest(name = "{0}")
