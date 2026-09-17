@@ -5,10 +5,11 @@ public class Cheecken {
     public static final String RESET = "\033[0m";
     private static final TaskList list = new TaskList();
     private static final Storage storage = new Storage("data/cheecken.txt");
+    private static final Parser parser = new Parser();
 
     private static int echo(String rawInput) {
-        String input = rawInput == null ? "" : rawInput.strip();
-        CommandType command = CommandType.fromInput(input);
+        String input = parser.normalize(rawInput);
+        CommandType command = parser.parseCommand(input);
         try {
             if (command == null) {
                 throw new CheeckenUnknownException();
