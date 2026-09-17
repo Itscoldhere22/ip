@@ -8,28 +8,40 @@ import java.util.Locale;
 
 public class Deadline extends Task {
     protected LocalDateTime deadline;
-    private final boolean hasTime;
+    private final boolean hasExplicitTime;
 
     public Deadline(String task, String deadline) {
         super(task);
-        this.hasTime = deadline.trim().contains(" ") || deadline.contains("T");
+        this.hasExplicitTime = deadline.trim().contains(" ") || deadline.contains("T");
         this.deadline = parseDateTime(deadline);
     }
 
     private static LocalDateTime parseDateTime(String value) {
-        try { return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME); }
-        catch (DateTimeParseException ignored) { }
-        try { return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm")); }
-        catch (DateTimeParseException ignored) { }
-        try { return LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay(); }
-        catch (DateTimeParseException ignored) { }
-        try { return LocalDateTime.parse(value + "T00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME); }
-        catch (DateTimeParseException ignored) { }
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        } catch (DateTimeParseException ignored) {
+            // Try the next supported format.
+        }
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm"));
+        } catch (DateTimeParseException ignored) {
+            // Try the next supported format.
+        }
+        try {
+            return LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay();
+        } catch (DateTimeParseException ignored) {
+            // Try the next supported format.
+        }
+        try {
+            return LocalDateTime.parse(value + "T00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        } catch (DateTimeParseException ignored) {
+            // Fall through to the user-facing exception.
+        }
         throw new CheeckenDateTimeException("deadline");
     }
 
     public String toString() {
-        String pattern = hasTime ? "MMM dd yyyy h:mm a" : "MMM dd yyyy";
+        String pattern = hasExplicitTime ? "MMM dd yyyy h:mm a" : "MMM dd yyyy";
         return "[D]" + super.toString() + " (by: "
                 + deadline.format(DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH)) + ")";
     }
