@@ -1,0 +1,54 @@
+package Cheecken;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+class TaskTest {
+    @Test
+    void newTask_isUnmarked() {
+        Task task = new Task("read book");
+
+        assertEquals("[ ] read book", task.toString());
+        assertEquals("T | 0 | read book", task.toStorageString());
+    }
+
+    @Test
+    void mark_unmarkedTask_marksTaskAsDone() {
+        Task task = new Task("read book");
+
+        task.mark();
+
+        assertEquals("[X] read book", task.toString());
+        assertEquals("T | 1 | read book", task.toStorageString());
+    }
+
+    @Test
+    void unmark_markedTask_marksTaskAsNotDone() {
+        Task task = new Task("read book");
+        task.mark();
+
+        task.unmark();
+
+        assertEquals("[ ] read book", task.toString());
+        assertEquals("T | 0 | read book", task.toStorageString());
+    }
+
+    @Test
+    void mark_alreadyMarkedTask_remainsMarked() {
+        Task task = new Task("read book");
+
+        task.mark();
+        task.mark();
+
+        assertEquals("[X] read book", task.toString());
+    }
+
+    @Test
+    void unmark_unmarkedTask_remainsUnmarked() {
+        Task task = new Task("read book");
+
+        task.unmark();
+
+        assertEquals("[ ] read book", task.toString());
+    }
+}
