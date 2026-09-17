@@ -6,6 +6,7 @@ public class Cheecken {
     private static final TaskList list = new TaskList();
     private static final Storage storage = new Storage("data/cheecken.txt");
     private static final Parser parser = new Parser();
+    private static final Ui ui = new Ui();
 
     private static int echo(String rawInput) {
         String input = parser.normalize(rawInput);
@@ -25,26 +26,18 @@ public class Cheecken {
             case DELETE -> handleDelete(input);
             };
         } catch (Exception e) {
-            System.out.println("____________________________________________________________");
-            System.out.println(e.getMessage());
+            ui.showError(e);
             return 0;
         }
     }
 
     private static int handleBye() {
-        System.out.println("____________________________________________________________\n"
-                + "Bye. Hope to see you again soon!\n"
-                + "____________________________________________________________");
+        ui.showBye();
         return 1;
     }
 
     private static int handleList() {
-        System.out.println("____________________________________________________________");
-        System.out.println("Here are the tasks in your list:");
-        for (int i = 0; i < list.size(); i++) {
-            System.out.println((i + 1) + "." + list.get(i));
-        }
-        System.out.println("____________________________________________________________");
+        ui.showList(list.asList());
         return 0;
     }
 
@@ -52,7 +45,7 @@ public class Cheecken {
         Task task = list.get(parseIndex(input, "mark"));
         task.mark();
         saveTasks();
-        printTaskMessage("Nice! I've marked this task as done:", task);
+        ui.showTaskMessage("Nice! I've marked this task as done:", task);
         return 0;
     }
 
@@ -60,7 +53,7 @@ public class Cheecken {
         Task task = list.get(parseIndex(input, "unmark"));
         task.unmark();
         saveTasks();
-        printTaskMessage("OK, I've marked this task as not done yet:", task);
+        ui.showTaskMessage("OK, I've marked this task as not done yet:", task);
         return 0;
     }
 
@@ -116,16 +109,11 @@ public class Cheecken {
     }
 
     private static void addTask(Task task) {
-        System.out.println("____________________________________________________________\n"
-                + "Got it. I've added this task:\n  " + task
-                + "\nNow you have " + list.size() + " tasks in the list.\n"
-                + "____________________________________________________________");
+        ui.showAdded(task, list.size());
     }
 
     private static void printTaskMessage(String message, Task task) {
-        System.out.println("____________________________________________________________");
-        System.out.println(message + "\n  " + task);
-        System.out.println("____________________________________________________________");
+        ui.showTaskMessage(message, task);
     }
 
     private static Todo storeMsg(String task) {
@@ -182,19 +170,7 @@ public class Cheecken {
 
     public static void main(String[] args) {
         loadTasks();
-        String welcomeMsg = """
-                 _____ _                    _             \s
-                /  __ \\ |                  | |            \s
-                | /  \\/ |__   ___  ___  ___| | _____ _ __ \s
-                | |   | '_ \\ / _ \\/ _ \\/ __| |/ / _ \\ '_ \\\s
-                | \\__/\\ | | |  __/  __/ (__|   <  __/ | | |
-                 \\____/_| |_|\\___|\\___|\\___|_|\\_\\___|_| |_|
-                ____________________________________________________________
-                Hello! I'm \033[3mCHEECKEN\033[0m.
-                What can I do for you?
-                ____________________________________________________________""";
-
-        System.out.println(welcomeMsg);
+        ui.showWelcome();
         Scanner scanner = new Scanner(System.in);
         while (true) {
             if (!scanner.hasNextLine()) {
