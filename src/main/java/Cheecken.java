@@ -1,14 +1,10 @@
-import java.util.List;
 import java.util.Scanner;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.io.IOException;
 
 public class Cheecken {
     public static final String ITALIC = "\033[3m";
     public static final String RESET = "\033[0m";
     private static final TaskList list = new TaskList();
-    private static final Path STORAGE_FILE = Path.of("data", "cheecken.txt");
+    private static final Storage storage = new Storage("data/cheecken.txt");
 
     private static int echo(String rawInput) {
         String input = rawInput == null ? "" : rawInput.strip();
@@ -172,52 +168,15 @@ public class Cheecken {
 
     private static void saveTasks() {
         try {
-            Files.createDirectories(STORAGE_FILE.getParent());
-            Files.write(STORAGE_FILE, list.asList().stream().map(Task::toStorageString).toList());
-        } catch (IOException | SecurityException e) {
+            storage.save(list.asList());
+        } catch (RuntimeException e) {
             System.out.println("Unable to save tasks: " + e.getMessage());
         }
     }
 
     /** Loads valid persisted tasks when the chatbot starts. */
     private static void loadTasks() {
-        if (!Files.exists(STORAGE_FILE)) {
-            return;
-        }
-        try {
-            for (String line : Files.readAllLines(STORAGE_FILE)) {
-                try {
-                String[] fields = line.split("\\s*\\|\\s*", -1);
-                if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
-                    continue;
-                }
-                Task task;
-                switch (fields[0]) {
-                case "T" -> task = new Todo(fields[2]);
-                case "D" -> {
-                    if (fields.length < 4) continue;
-                    task = new Deadline(fields[2], fields[3]);
-                }
-                case "E" -> {
-                    if (fields.length >= 5) {
-                        task = new Event(fields[2], fields[3], fields[4]);
-                    } else {
-                        task = new Event(fields[2], fields[3], "");
-                    }
-                }
-                default -> { continue; }
-                }
-                if ("1".equals(fields[1])) {
-                    task.mark();
-                }
-                list.add(task);
-                } catch (RuntimeException ignored) {
-                    // Ignore malformed or legacy records and continue loading.
-                }
-            }
-        } catch (IOException | SecurityException e) {
-            System.out.println("Unable to load tasks: " + e.getMessage());
-        }
+        storage.load().forEach(list::add);
     }
 
     public static void main(String[] args) {
