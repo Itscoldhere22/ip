@@ -34,6 +34,25 @@ Use lightweight tags unless the user requests an annotated tag.
 When proposing or creating a commit message, include enough detail to explain the rationale for the change.
 Do not commit or push unless explicitly asked.
 
+# Java coding standard
+
+For every Java source or test change, invoke `$seedu-java-coding-standard` and
+follow the SE-EDU basic and intermediate Java conventions. This includes
+package/import organization, naming, K&R braces, four-space indentation,
+120-character line limits, complete braces around control flow, Javadocs for
+classes/public methods/non-trivial private methods, descriptive test names,
+and keeping generated binaries/build output out of version control.
+
+# Git standard
+
+For all future commits and branches, invoke `$seedu-git-standard` and follow
+the SE-EDU Git conventions. Commit subjects must be imperative, capitalized,
+period-free, and no longer than 72 characters (prefer 50). Non-trivial
+commits must have a blank-line-separated body wrapped at 72 characters that
+explains what changed and why. Branch names must be meaningful kebab-case, or
+issue-number-prefixed kebab-case when tied to an issue. Do not commit or push
+unless explicitly requested.
+
 # UI test workflow
 
 After every code update, review `test/ui-test-plan.md` and update it when the

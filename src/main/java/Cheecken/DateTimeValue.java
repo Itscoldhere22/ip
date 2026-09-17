@@ -24,10 +24,26 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
         if (value.equalsIgnoreCase("now")) {
             return new DateTimeValue(LocalDateTime.now(clock), true);
         }
-        try { return new DateTimeValue(LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME), true); } catch (DateTimeParseException ignored) { }
-        try { return new DateTimeValue(LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm")), true); } catch (DateTimeParseException ignored) { }
-        try { return new DateTimeValue(LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay(), false); } catch (DateTimeParseException ignored) { }
-        try { return new DateTimeValue(LocalDate.parse(value).atStartOfDay(), false); } catch (DateTimeParseException ignored) { }
+        try {
+            return new DateTimeValue(LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME), true);
+        } catch (DateTimeParseException ignored) {
+            // Try the next supported format.
+        }
+        try {
+            return new DateTimeValue(LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm")), true);
+        } catch (DateTimeParseException ignored) {
+            // Try the next supported format.
+        }
+        try {
+            return new DateTimeValue(LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay(), false);
+        } catch (DateTimeParseException ignored) {
+            // Try the next supported format.
+        }
+        try {
+            return new DateTimeValue(LocalDate.parse(value).atStartOfDay(), false);
+        } catch (DateTimeParseException ignored) {
+            // Fall through to the user-facing exception.
+        }
         throw new CheeckenDateTimeException(command);
     }
     public String display() { return value.format(hasExplicitTime ? TIME : DATE); }
