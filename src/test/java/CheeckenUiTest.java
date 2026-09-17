@@ -1,3 +1,5 @@
+package Cheecken;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -62,7 +64,7 @@ class CheeckenUiTest {
     }
 
     private static ProcessBuilder process(String input, Path dir) {
-        return new ProcessBuilder("java", "-cp", System.getProperty("java.class.path"), "Cheecken")
+        return new ProcessBuilder("java", "-cp", System.getProperty("java.class.path"), "Cheecken.Cheecken")
                 .directory(dir.toFile()).redirectErrorStream(true).redirectInput(ProcessBuilder.Redirect.PIPE);
     }
 }

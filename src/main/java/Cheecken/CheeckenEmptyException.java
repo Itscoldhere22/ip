@@ -1,3 +1,5 @@
+package Cheecken;
+
 public class CheeckenEmptyException extends RuntimeException {
     public CheeckenEmptyException(String task) {
         super("There's no task that is empty. LOCK INNN!\n" + switch (task) {

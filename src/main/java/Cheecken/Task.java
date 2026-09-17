@@ -1,3 +1,5 @@
+package Cheecken;
+
 public class Task {
     protected final String task;
     protected boolean isMarked;

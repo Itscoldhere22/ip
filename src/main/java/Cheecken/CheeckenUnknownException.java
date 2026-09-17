@@ -1,3 +1,5 @@
+package Cheecken;
+
 public class CheeckenUnknownException extends RuntimeException {
     public CheeckenUnknownException() {
         super("""

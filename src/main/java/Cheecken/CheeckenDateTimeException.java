@@ -1,3 +1,5 @@
+package Cheecken;
+
 /** Indicates that a deadline or event date/time is missing or invalid. */
 public class CheeckenDateTimeException extends RuntimeException {
     public CheeckenDateTimeException(String command) {

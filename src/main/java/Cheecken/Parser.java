@@ -1,3 +1,5 @@
+package Cheecken;
+
 /** Converts raw user input into a recognized command. */
 public class Parser {
     public String normalize(String rawInput) {

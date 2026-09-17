@@ -1,3 +1,5 @@
+package Cheecken;
+
 import java.util.Scanner;
 
 public class Cheecken {

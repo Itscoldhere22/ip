@@ -1,3 +1,5 @@
+package Cheecken;
+
 /**
  * Commands understood by the Cheecken command-line interface.
  */

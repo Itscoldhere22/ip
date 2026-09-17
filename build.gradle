@@ -11,7 +11,7 @@ plugins {
 }
 
 application {
-    mainClass = 'Cheecken'
+    mainClass = 'Cheecken.Cheecken'
 }
 
 repositories {
@@ -31,7 +31,7 @@ version = '1.0-SNAPSHOT'
 description = 'cheecken'
 
 application {
-    mainClass = 'Cheecken'
+    mainClass = 'Cheecken.Cheecken'
 }
 
 java {

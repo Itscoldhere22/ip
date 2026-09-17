@@ -1,3 +1,5 @@
+package Cheecken;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.time.Clock;
 import java.time.Instant;
