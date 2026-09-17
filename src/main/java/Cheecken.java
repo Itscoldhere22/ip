@@ -1,8 +1,6 @@
 import java.util.Scanner;
 
 public class Cheecken {
-    public static final String ITALIC = "\033[3m";
-    public static final String RESET = "\033[0m";
     private static final TaskList list = new TaskList();
     private static final Storage storage = new Storage("data/cheecken.txt");
     private static final Parser parser = new Parser();
@@ -104,16 +102,12 @@ public class Cheecken {
 
     private static int handleDelete(String input) {
         Task task = deleteTask(parseIndex(input, "delete"));
-        printTaskMessage("Noted. I've removed this task:", task);
+        ui.showTaskMessage("Noted. I've removed this task:", task);
         return 0;
     }
 
     private static void addTask(Task task) {
         ui.showAdded(task, list.size());
-    }
-
-    private static void printTaskMessage(String message, Task task) {
-        ui.showTaskMessage(message, task);
     }
 
     private static Todo storeMsg(String task) {
@@ -168,7 +162,7 @@ public class Cheecken {
         storage.load().forEach(list::add);
     }
 
-    public static void main(String[] args) {
+    public void run() {
         loadTasks();
         ui.showWelcome();
         Scanner scanner = new Scanner(System.in);
@@ -182,5 +176,9 @@ public class Cheecken {
                 break ;
         }
         scanner.close();
+    }
+
+    public static void main(String[] args) {
+        new Cheecken().run();
     }
 }

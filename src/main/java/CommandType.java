@@ -17,16 +17,6 @@ public enum CommandType {
         this.keyword = keyword;
     }
 
-    public static CommandType fromInput(String input) {
-        String keyword = input.split("\\s+", 2)[0];
-        for (CommandType command : values()) {
-            if (command.keyword.equals(keyword)) {
-                return command;
-            }
-        }
-        return null;
-    }
-
     /**
      * Returns whether the input starts with this command keyword.
      * Commands without arguments require an exact match.
