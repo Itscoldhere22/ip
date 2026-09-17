@@ -29,6 +29,20 @@ public class Ui {
         System.out.println(SEPARATOR);
     }
 
+    /** Displays tasks matching a search keyword, or a no-match message. */
+    public void showFind(List<Task> matches) {
+        System.out.println(SEPARATOR);
+        if (matches.isEmpty()) {
+            System.out.println("There are no matching tasks in your list.");
+        } else {
+            System.out.println("Here are the matching tasks in your list:");
+            for (int i = 0; i < matches.size(); i++) {
+                System.out.println((i + 1) + "." + matches.get(i));
+            }
+        }
+        System.out.println(SEPARATOR);
+    }
+
     public void showAdded(Task task, int count) {
         System.out.println(SEPARATOR + "\nGot it. I've added this task:\n  " + task
                 + "\nNow you have " + count + " tasks in the list.\n" + SEPARATOR);

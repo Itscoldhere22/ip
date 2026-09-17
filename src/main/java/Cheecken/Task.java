@@ -1,5 +1,7 @@
 package Cheecken;
 
+import java.util.Locale;
+
 public class Task {
     protected final String task;
     protected boolean isMarked;
@@ -15,6 +17,11 @@ public class Task {
 
     public void unmark() {
         this.isMarked = false;
+    }
+
+    /** Returns whether this task description contains the supplied keyword. */
+    public boolean containsKeyword(String keyword) {
+        return task.toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT));
     }
 
     public String toStorageString() {
