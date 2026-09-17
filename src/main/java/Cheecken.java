@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.nio.file.Files;
@@ -8,7 +7,7 @@ import java.io.IOException;
 public class Cheecken {
     public static final String ITALIC = "\033[3m";
     public static final String RESET = "\033[0m";
-    private static final List<Task> list = new ArrayList<>();
+    private static final TaskList list = new TaskList();
     private static final Path STORAGE_FILE = Path.of("data", "cheecken.txt");
 
     private static int echo(String rawInput) {
@@ -134,7 +133,7 @@ public class Cheecken {
 
     private static Todo storeMsg(String task) {
         Todo newTodo = new Todo(task);
-        list.add(newTodo);
+                list.add(newTodo);
         saveTasks();
 
         return newTodo;
@@ -174,7 +173,7 @@ public class Cheecken {
     private static void saveTasks() {
         try {
             Files.createDirectories(STORAGE_FILE.getParent());
-            Files.write(STORAGE_FILE, list.stream().map(Task::toStorageString).toList());
+            Files.write(STORAGE_FILE, list.asList().stream().map(Task::toStorageString).toList());
         } catch (IOException | SecurityException e) {
             System.out.println("Unable to save tasks: " + e.getMessage());
         }

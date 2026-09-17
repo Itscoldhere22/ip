@@ -7,8 +7,11 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'application'
-    id 'checkstyle'
     id 'com.gradleup.shadow' version '9.5.1'
+}
+
+application {
+    mainClass = 'Cheecken'
 }
 
 repositories {
@@ -20,12 +23,22 @@ repositories {
 
 dependencies {
     testImplementation libs.org.junit.jupiter.junit.jupiter
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
 }
 
 group = 'cheecken'
 version = '1.0-SNAPSHOT'
 description = 'cheecken'
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+application {
+    mainClass = 'Cheecken'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 publishing {
     publications {
@@ -41,4 +54,12 @@ tasks.withType(JavaCompile) {
 
 tasks.withType(Javadoc) {
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+tasks.named('run') {
+    standardInput = System.in
 }
