@@ -24,6 +24,7 @@ public class Cheecken {
             case EVENT -> handleEvent(input);
             case TODO -> handleTodo(input);
             case DELETE -> handleDelete(input);
+            case FIND -> handleFind(input);
             };
         } catch (Exception e) {
             ui.showError(e);
@@ -105,6 +106,15 @@ public class Cheecken {
     private static int handleDelete(String input) {
         Task task = deleteTask(parseIndex(input, "delete"));
         ui.showTaskMessage("Noted. I've removed this task:", task);
+        return 0;
+    }
+
+    private static int handleFind(String input) {
+        String keyword = input.substring("find".length()).strip();
+        if (keyword.isBlank()) {
+            throw new CheeckenFindException();
+        }
+        ui.showFind(list.find(keyword));
         return 0;
     }
 

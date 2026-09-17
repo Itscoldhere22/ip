@@ -30,6 +30,11 @@ public class TaskList {
     public List<Task> asList() {
         return List.copyOf(tasks);
     }
+
+    /** Returns tasks whose descriptions contain the keyword, in list order. */
+    public List<Task> find(String keyword) {
+        return tasks.stream().filter(task -> task.containsKeyword(keyword)).toList();
+    }
 }
     /** Creates an empty task list. */
     /** Adds a task to the list. */

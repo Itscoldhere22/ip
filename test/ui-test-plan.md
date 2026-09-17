@@ -238,6 +238,42 @@
 - **Expected output:** `There's no task that is empty. LOCK INNN!` followed by
   the event example using datetimes.
 
+### 15. Find tasks by keyword
+
+- **Aim:** Verify that `find <keyword>` displays every task whose description
+  contains the keyword, while preserving the task-list order and formatting.
+- **Input:**
+
+  ```text
+  todo read book
+  deadline return book /by 15/10/2025
+  find book
+  bye
+  ```
+
+- **Expected output:** The response begins `Here are the matching tasks in
+  your list:` and includes `1.[T][ ] read book` and
+  `2.[D][ ] return book`.
+
+### 16. Case-insensitive keyword search
+
+- **Aim:** Verify that searching is case-insensitive.
+- **Input:** `todo Read Book`, then `find book`, then `bye`.
+- **Expected output:** The result includes `1.[T][ ] Read Book`.
+
+### 17. Find with no matching tasks
+
+- **Aim:** Verify that a search with no matches does not mutate the task list
+  and reports that no tasks match.
+- **Input:** `todo buy flowers`, then `find book`, then `bye`.
+- **Expected output:** `There are no matching tasks in your list.`
+
+### 18. Find without a keyword
+
+- **Aim:** Verify that the incomplete `find` command is rejected clearly.
+- **Input:** `todo read book`, then `find`, then `bye`.
+- **Expected output:** `Please provide a keyword to search for.`
+
 ### 11. Event without datetime
 
 - **Aim:** Reject an event that has a task but no `/from` or `/to` datetime.
