@@ -8,6 +8,6 @@ public class Todo extends Task {
     }
     @Override
     public String toStorageString() {
-        return "T | " + (marked ? "1" : "0") + " | " + task;
+        return "T | " + (isMarked ? "1" : "0") + " | " + task;
     }
 }

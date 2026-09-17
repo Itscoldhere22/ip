@@ -34,6 +34,6 @@ public class Deadline extends Task {
 
     @Override
     public String toStorageString() {
-        return "D | " + (marked ? "1" : "0") + " | " + task + " | " + deadline;
+        return "D | " + (isMarked ? "1" : "0") + " | " + task + " | " + deadline;
     }
 }

@@ -20,4 +20,6 @@ _temp/
 text-ui-test/EXPECTED-UNIX.TXT
 
 .class
-.classpath
+*.class
+*.jar
+target/
