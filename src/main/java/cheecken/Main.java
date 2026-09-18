@@ -50,9 +50,9 @@ public class Main extends Application {
         VBox footer = createFooter(stage);
         BorderPane root = new BorderPane(scroll, header, null, footer, null);
         Scene scene = new Scene(root, 620, 720);
-        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());    // beautiful green style
         stage.setTitle("Cheecken — your task companion");
-        stage.setMinWidth(420);
+        stage.setMinWidth(420);     // window is resizable by default
         stage.setMinHeight(480);
         stage.setScene(scene);
         showGreeting();
