@@ -61,7 +61,7 @@ public class Cheecken {
             loadTasks();
             isLoaded = true;
         }
-        isFinished = echo(input) == 1;
+        isFinished = executeCommand(input);
         return response.toString().lines()
                 .filter(line -> !line.equals("____________________________________________________________"))
                 .collect(Collectors.joining("\n")).strip();
@@ -77,9 +77,9 @@ public class Cheecken {
     /**
      * Processes one raw command and returns whether the chatbot should exit.
      * @param rawInput command entered by the user
-     * @return 1 when the command requests exit; otherwise 0
+     * @return true when the command requests exit; otherwise false
      */
-    private int echo(String rawInput) {
+    private boolean executeCommand(String rawInput) {
         // Both entry points must load persisted tasks before accepting commands.
         assert isLoaded : "Tasks must be loaded before processing commands";
         String input = parser.normalize(rawInput);
@@ -101,60 +101,60 @@ public class Cheecken {
             };
         } catch (Exception e) {
             ui.showError(e);
-            return 0;
+            return false;
         }
     }
 
     /**
      * Displays the farewell message.
-     * @return 1 to terminate the command loop
+     * @return true to terminate the command loop
      */
-    private int handleBye() {
+    private boolean handleBye() {
         ui.showBye();
-        return 1;
+        return true;
     }
 
     /**
      * Displays all tasks currently in the task list.
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleList() {
+    private boolean handleList() {
         ui.showList(list.asList());
-        return 0;
+        return false;
     }
 
     /**
      * Marks the task selected by a one-based index as complete.
      * @param input complete mark command
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleMark(String input) {
+    private boolean handleMark(String input) {
         Task task = list.get(parseIndex(input, "mark"));
         task.mark();
         saveTasks();
         ui.showTaskMessage("Nice! I've marked this task as done:", task);
-        return 0;
+        return false;
     }
 
     /**
      * Marks the task selected by a one-based index as incomplete.
      * @param input complete unmark command
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleUnmark(String input) {
+    private boolean handleUnmark(String input) {
         Task task = list.get(parseIndex(input, "unmark"));
         task.unmark();
         saveTasks();
         ui.showTaskMessage("OK, I've marked this task as not done yet:", task);
-        return 0;
+        return false;
     }
 
     /**
      * Creates and stores a todo task from the command text.
      * @param input complete todo command
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleTodo(String input) {
+    private boolean handleTodo(String input) {
         if (input.length() <= 4) {
             throw new CheeckenEmptyException("todo");
         }
@@ -162,16 +162,16 @@ public class Cheecken {
         if (taskText.isBlank()) {
             throw new CheeckenEmptyException("todo");
         }
-        addTask(storeMsg(taskText));
-        return 0;
+        addTask(new Todo(taskText));
+        return false;
     }
 
     /**
      * Creates and stores a deadline task from the command text.
      * @param input complete deadline command
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleDeadline(String input) {
+    private boolean handleDeadline(String input) {
         int slash = input.indexOf("/");
         if (slash == -1) {
             if (input.substring(8).isBlank()) {
@@ -187,16 +187,16 @@ public class Cheecken {
             throw new CheeckenDateTimeException("deadline");
         }
         String deadline = input.substring(slash + 4);
-        addTask(storeMsg(taskText, deadline));
-        return 0;
+        addTask(new Deadline(taskText, deadline));
+        return false;
     }
 
     /**
      * Creates and stores an event task from the command text.
      * @param input complete event command
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleEvent(String input) {
+    private boolean handleEvent(String input) {
         int from = input.indexOf("/from");
         int to = input.indexOf("/to");
         if (from == -1) {
@@ -217,84 +217,44 @@ public class Cheecken {
         }
         String start = input.substring(from + 5, to).strip();
         String end = input.substring(to + 3).strip();
-        addTask(storeMsg(taskText, start, end));
-        return 0;
+        addTask(new Event(taskText, start, end));
+        return false;
     }
 
     /**
      * Deletes the task selected by a one-based index.
      * @param input complete delete command
-     * @return 0 to continue the command loop
+     * @return false to continue the command loop
      */
-    private int handleDelete(String input) {
+    private boolean handleDelete(String input) {
         Task task = deleteTask(parseIndex(input, "delete"));
         ui.showTaskMessage("Noted. I've removed this task:", task);
-        return 0;
+        return false;
     }
 
     /**
      * Displays tasks matching the supplied nonempty search keyword.
      */
-    private int handleFind(String input) {
+    private boolean handleFind(String input) {
         String keyword = input.substring("find".length()).strip();
         if (keyword.isBlank()) {
             throw new CheeckenFindException();
         }
         ui.showFind(list.find(keyword));
-        return 0;
+        return false;
     }
 
     /**
-     * Displays confirmation after a task has been added.
-     * @param task newly added task
+     * Adds and persists a task before displaying confirmation.
+     * @param task task to add
      */
     private void addTask(Task task) {
-        // Each storeMsg overload must append the task before confirming it.
+        list.add(task);
+        saveTasks();
+        // Confirmation must describe the task just appended to the list.
         assert list.size() > 0 && list.get(list.size() - 1) == task
                 : "The added task must be the last task in the list";
         ui.showAdded(task, list.size());
-    }
-
-    /**
-     * Creates and persists a todo task.
-     * @param task task description
-     * @return created todo task
-     */
-    private Todo storeMsg(String task) {
-        Todo newTodo = new Todo(task);
-        list.add(newTodo);
-        saveTasks();
-
-        return newTodo;
-    }
-
-    /**
-     * Creates and persists a deadline task.
-     * @param task task description
-     * @param deadline deadline value
-     * @return created deadline task
-     */
-    private Deadline storeMsg(String task, String deadline) {
-        Deadline newDeadline = new Deadline(task, deadline);
-        list.add(newDeadline);
-        saveTasks();
-
-        return newDeadline;
-    }
-
-    /**
-     * Creates and persists an event task.
-     * @param task task description
-     * @param startTime event start value
-     * @param endTime event end value
-     * @return created event task
-     */
-    private Event storeMsg(String task, String startTime, String endTime) {
-        Event newEvent = new Event(task, startTime, endTime);
-        list.add(newEvent);
-        saveTasks();
-
-        return newEvent;
     }
 
     /**
@@ -359,9 +319,9 @@ public class Cheecken {
             }
             String input = scanner.nextLine();
             response.setLength(0);
-            int echoRes = echo(input);
+            boolean shouldExit = executeCommand(input);
             System.out.print(response);
-            if (echoRes == 1) {
+            if (shouldExit) {
                 break;
             }
         }
