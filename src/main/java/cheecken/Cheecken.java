@@ -80,6 +80,8 @@ public class Cheecken {
      * @return 1 when the command requests exit; otherwise 0
      */
     private int echo(String rawInput) {
+        // Both entry points must load persisted tasks before accepting commands.
+        assert isLoaded : "Tasks must be loaded before processing commands";
         String input = parser.normalize(rawInput);
         CommandType command = parser.parseCommand(input);
         try {
@@ -247,6 +249,9 @@ public class Cheecken {
      * @param task newly added task
      */
     private void addTask(Task task) {
+        // Each storeMsg overload must append the task before confirming it.
+        assert list.size() > 0 && list.get(list.size() - 1) == task
+                : "The added task must be the last task in the list";
         ui.showAdded(task, list.size());
     }
 
@@ -298,6 +303,8 @@ public class Cheecken {
      * @return removed task
      */
     private Task deleteTask(int taskIndex) {
+        // The command handler must validate user input through parseIndex first.
+        assert taskIndex >= 0 && taskIndex < list.size() : "Deletion requires a validated task index";
         Task task = list.remove(taskIndex);
         saveTasks();
         return task;
@@ -333,6 +340,8 @@ public class Cheecken {
      * Loads valid persisted tasks when the chatbot starts.
      */
     private void loadTasks() {
+        // Loading twice would append duplicate records to the in-memory list.
+        assert !isLoaded && list.size() == 0 : "Tasks must only be loaded into an uninitialized, empty list";
         storage.load().forEach(list::add);
     }
 
