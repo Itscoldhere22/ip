@@ -45,19 +45,50 @@ public class Main extends Application {
      */
     @Override
     public void start(Stage stage) {
+        VBox header = createHeader();
+        ScrollPane scroll = createConversationPane();
+        VBox footer = createFooter(stage);
+        BorderPane root = new BorderPane(scroll, header, null, footer, null);
+        Scene scene = new Scene(root, 620, 720);
+        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());
+        stage.setTitle("Cheecken — your task companion");
+        stage.setMinWidth(420);
+        stage.setMinHeight(480);
+        stage.setScene(scene);
+        showGreeting();
+        stage.show();
+        Platform.runLater(input::requestFocus);
+    }
+
+    /**
+     * Creates the application heading and expandable command guide.
+     */
+    private VBox createHeader() {
         Label title = new Label("Cheecken");
         title.getStyleClass().add("title");
         Label subtitle = new Label("A little help with your everyday tasks.");
         subtitle.getStyleClass().add("muted");
         VBox header = new VBox(5, title, subtitle, createGuide());
         header.getStyleClass().add("header");
+        return header;
+    }
 
+    /**
+     * Creates a conversation viewport that follows newly added messages.
+     */
+    private ScrollPane createConversationPane() {
         conversation.setPadding(new Insets(20));
         ScrollPane scroll = new ScrollPane(conversation);
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         conversation.heightProperty().addListener((observable, oldHeight, newHeight) -> scroll.setVvalue(1));
+        return scroll;
+    }
 
+    /**
+     * Creates the input controls and connects keyboard and button submission.
+     */
+    private VBox createFooter(Stage stage) {
         input.setId("commandInput");
         input.setPromptText("Try: todo read a book");
         input.setAccessibleText("Task command");
@@ -71,22 +102,19 @@ public class Main extends Application {
         status.setWrapText(true);
         VBox footer = new VBox(8, composer, status);
         footer.getStyleClass().add("footer");
+        return footer;
+    }
 
-        BorderPane root = new BorderPane(scroll, header, null, footer, null);
-        Scene scene = new Scene(root, 620, 720);
-        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());
-        stage.setTitle("Cheecken — your task companion");
-        stage.setMinWidth(420);
-        stage.setMinHeight(480);
-        stage.setScene(scene);
+    /**
+     * Introduces the chatbot and displays any warnings from loading saved tasks.
+     */
+    private void showGreeting() {
         addMessage("Cheecken", "Hello! What can I help you remember?\n"
                 + "Try todo read a book, or list to see your saved tasks.", false);
         String warning = chatbot.initialize();
         if (!warning.isBlank()) {
             addMessage("Cheecken", warning, false);
         }
-        stage.show();
-        Platform.runLater(input::requestFocus);
     }
 
     /**
