@@ -125,7 +125,11 @@ public class Main extends Application {
                 + "deadline submit report /by 15/10/2026 1800\n"
                 + "event meeting /from 15/10/2026 0900 /to 15/10/2026 1000\n"
                 + "list • find book • mark 1 • unmark 1 • delete 1 • bye\n"
-                + "Dates: d/M/yyyy, optionally followed by HHmm.");
+                + "Dates: d/M/yyyy or ISO yyyy-MM-dd; optional HHmm (ISO: T18:00).\n"
+                + "Natural dates: today, tomorrow, now, Mon–Sun or full weekday names.\n"
+                + "Weekdays mean the strictly next occurrence, even on the same weekday.\n"
+                + "Try: deadline report /by tomorrow 1800\n"
+                + "Use HHmm after a date word; now takes no time suffix. Dates use local time.");
         examples.setWrapText(true);
         examples.setMaxWidth(Double.MAX_VALUE);
         TitledPane guide = new TitledPane("Command guide", examples);

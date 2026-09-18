@@ -9,7 +9,8 @@ public class CheeckenDateTimeException extends RuntimeException {
      */
     public CheeckenDateTimeException(String command) {
         super("No time how I set the task...\n" + (command.equals("event")
-                ? "(e.g. event buying her flowers /from 15/10/2025 0900 /to 15/10/2025 1100)"
-                : "(e.g. deadline buy her flowers /by 15/10/2025 1800)"));
+                ? "Try: event meeting /from today 0900 /to tomorrow 1000."
+                : "Try: deadline report /by tomorrow 1800.")
+                + "\nDates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.");
     }
 }

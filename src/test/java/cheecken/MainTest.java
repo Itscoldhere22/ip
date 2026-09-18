@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
@@ -43,7 +46,8 @@ class MainTest {
             Stage stage = new Stage();
             try {
                 Path saved = directory.resolve("tasks.txt");
-                new Main(new Cheecken(saved.toString())).start(stage);
+                Clock clock = Clock.fixed(Instant.parse("2026-09-07T15:30:00Z"), ZoneOffset.UTC);
+                new Main(new Cheecken(saved.toString(), clock)).start(stage);
                 Scene scene = stage.getScene();
                 TextField input = (TextField) scene.lookup("#commandInput");
                 Button send = (Button) scene.lookup("#sendButton");
@@ -62,6 +66,12 @@ class MainTest {
                 enter(input, "event meeting /from 15/10/2026 0900 /to 15/10/2026 1000");
                 assertTrue(text(scene.getRoot()).contains("Oct 15 2026 6:00 PM"));
                 assertTrue(text(scene.getRoot()).contains("Oct 15 2026 9:00 AM"));
+                enter(input, "deadline natural /by tomorrow");
+                enter(input, "event weekday /from Mon 0900 /to MONDAY 1000");
+                assertTrue(text(scene.getRoot()).contains("[D][ ] natural (by: Sep 08 2026)"));
+                assertTrue(text(scene.getRoot()).contains("from: Sep 14 2026 9:00 AM to: Sep 14 2026 10:00 AM"));
+                enter(input, "deadline invalid /by next week");
+                assertTrue(text(scene.getRoot()).contains("No time how I set the task..."));
                 enter(input, "wat");
                 assertTrue(text(scene.getRoot()).contains("What do you want?"));
                 enter(input, "find GUI");
@@ -69,6 +79,8 @@ class MainTest {
                 TitledPane guide = (TitledPane) scene.lookup(".titled-pane");
                 guide.setExpanded(true);
                 assertTrue(text(scene.getRoot()).contains("Dates: d/M/yyyy"));
+                assertTrue(text(scene.getRoot()).contains("today, tomorrow, now"));
+                assertTrue(text(scene.getRoot()).contains("strictly next"));
                 guide.setExpanded(false);
                 enter(input, "todo " + "A longer task description ".repeat(8));
                 for (int i = 0; i < 8; i++) {
@@ -88,11 +100,13 @@ class MainTest {
                 assertTrue(text(scene.getRoot()).contains("Bye. Hope to see you again soon!"));
                 assertFalse(stage.isShowing());
                 assertTrue(Files.readString(saved).contains("T | 1 | GUI test task"));
-                new Main(new Cheecken(saved.toString())).start(stage);
+                new Main(new Cheecken(saved.toString(), Clock.offset(clock, java.time.Duration.ofDays(1))))
+                        .start(stage);
                 stage.getScene().getRoot().applyCss();
                 stage.getScene().getRoot().layout();
                 enter((TextField) stage.getScene().lookup("#commandInput"), "list");
                 assertTrue(text(stage.getScene().getRoot()).contains("1.[T][X] GUI test task"));
+                assertTrue(text(stage.getScene().getRoot()).contains("[D][ ] natural (by: Sep 08 2026)"));
                 stage.setWidth(620);
                 stage.setHeight(720);
                 stage.getScene().getRoot().applyCss();

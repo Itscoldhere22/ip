@@ -39,6 +39,10 @@ Open **Command guide** in the window for examples. Commands include:
 todo read a book
 deadline submit report /by 15/10/2026 1800
 event meeting /from 15/10/2026 0900 /to 15/10/2026 1000
+deadline read chapter /by tomorrow
+deadline send email /by today 1800
+event study group /from Mon 0900 /to Monday 1000
+deadline start now /by now
 list
 find book
 mark 1
@@ -47,13 +51,30 @@ delete 1
 bye
 ```
 
-Task numbers start at 1; use `list` to see them. Dates accept `d/M/yyyy` and optional
-24-hour `HHmm` time. Blank messages are ignored. Replies wrap to fit the window and
+Task numbers start at 1; use `list` to see them. Dates accept `d/M/yyyy` with optional
+24-hour `HHmm` time, or ISO dates/date-times such as `2026-10-15` and `2026-10-15T18:00`.
+Natural dates accept `today`, `tomorrow`, `now`, and all English weekday names:
+`Mon`–`Sun` or `Monday`–`Sunday`. Date words are case-insensitive; flags stay lowercase.
+You can append `HHmm` to `today`, `tomorrow`, or a weekday, but not to `now`.
+
+A weekday always means its **strictly next occurrence**: `Mon` entered on Monday
+means seven days later. Dates use your computer's local timezone at submission.
+Both event endpoints use the same clock reading and resolve independently;
+past times and end dates before start dates remain allowed. `now` uses the current
+date and time. Date-only inputs display without a time; supplied times display in
+12-hour format. Additional phrases such as `next Monday`, `yesterday`, and `6pm`
+are not supported. See the [user guide](docs/README.md) for examples and details.
+
+Blank messages are ignored. Replies wrap to fit the window and
 scroll into view. `bye` closes the window and exits the app. Closing the window directly is also safe: task changes are saved after each command.
 
 Tasks are stored in `data/cheecken.txt`, relative to the directory from which you launch
 the application. Reopen from the same directory to load the same tasks. Storage errors
 appear in the conversation. The conversation history itself is not persisted.
+Natural dates are resolved once and saved as absolute values, so they never move
+when you reopen the app. New date-only deadlines retain their date-only display.
+Existing stored midnight timestamps remain timed values. Manually stored natural
+date expressions are malformed records and are skipped, not reinterpreted.
 
 ## Understanding the code
 
@@ -82,6 +103,9 @@ The console interface remains available for debugging:
 It uses temporary task data to exercise Enter, Send, blank input, error recovery, command
 help, scrolling, resizing, exit behaviour, and persistence after reopening.
 See `test/ui-test-plan.md` for the acceptance plan and the legacy console cases.
+Natural-date tests use fixed clocks, including timezone and midnight boundaries.
+The console acceptance fixture runs at Monday, 7 September 2026, 15:30 UTC;
+the normal application always uses the computer's local clock.
 
 Checkstyle **14.1.0** uses the [SE-EDU Java coding standard](https://se-education.org/guides/conventions/java/intermediate.html)
 configuration from [AddressBook Level 3](https://github.com/se-edu/addressbook-level3/tree/master/config/checkstyle).

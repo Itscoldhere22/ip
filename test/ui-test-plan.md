@@ -4,6 +4,10 @@
 
 - Run commands from the repository root.
 - Use Java 25.
+- Natural-date acceptance tests use `cheecken.FixedClockCli` with a fixed
+  clock of Monday, 7 September 2026 at 15:30 UTC. It runs the same console
+  loop as the application. Parser unit tests also cover local timezone,
+  leap-year, midnight, month/year boundaries, and unsupported expressions.
 - In expected-output blocks, `\033` represents the actual ANSI escape
   character (U+001B), not four literal characters. Decode only this notation
   before comparing; preserve the ASCII-art backslashes literally.
@@ -13,10 +17,10 @@
 - Compare all remaining stdout exactly, including ANSI formatting sequences,
   whitespace, blank lines, and the final newline. Require empty stderr and
   exit code 0 unless a case explicitly specifies otherwise.
-- Compile with `./gradlew classes` so JavaFX dependencies are available.
+- Compile with `./gradlew testClasses` so the fixed-clock console fixture is available.
 - Run each console case in a fresh temporary working directory, using an
-  absolute classpath to `build/classes/java/main`. Never use real task data.
-- The console entry point remains `cheecken.Cheecken`; the GUI uses
+  absolute classpath to `build/classes/java/main` and `build/classes/java/test`. Never use real task data.
+- Production uses `cheecken.Cheecken`; acceptance uses `cheecken.FixedClockCli`; the GUI uses
   `cheecken.Launcher`.
 
 ## JavaFX acceptance test
@@ -33,8 +37,13 @@
   4. Click Send for `mark 1`: reply includes `[T][X] GUI test task`.
   5. Add a deadline and event using `15/10/2026 1800` and
      `/from 15/10/2026 0900 /to 15/10/2026 1000`: dates display in 12-hour format.
+     With the fixed Monday clock, also enter `deadline natural /by tomorrow`
+     and `event weekday /from Mon 0900 /to MONDAY 1000`. Expect Sep 08 2026
+     without a time and Sep 14 2026 at 9:00 AM–10:00 AM respectively.
+     Reject `deadline invalid /by next week` without adding a task.
   6. Enter `wat`, then `find GUI`: an error appears and the next command works.
   7. Expand Command guide: command examples and date format are visible.
+     Natural-date help includes today, tomorrow, now, and the strictly-next weekday rule.
   8. Submit a long task and repeated `list` commands; resize to 440 × 560:
      messages wrap, the composer remains usable, and the conversation scrolls
      to the latest response.
@@ -42,209 +51,908 @@
   10. Open a new window using the same temporary file and enter `list`:
       the first task is still marked complete. Submit `bye` using Send and
       verify that this also closes the window.
+      Use a clock one day later and verify the natural deadline still displays
+      Sep 08 2026 without midnight.
 - **Expected result:** All assertions pass. A rendered scene snapshot is saved
   to the Java temporary directory as `cheecken-gui.png` for visual review.
   JavaFX may issue a Java 25 native-access warning on stderr; this is not a
   command response or a failed assertion.
 
-## Legacy console test cases
+## Console acceptance cases
 
-These cases predate the GUI. Some cases still describe older error messages;
-do not silently adjust their expected results when running regression checks.
-Stop and report the first mismatch.
+The obsolete error expectations in cases 3 and 4 are corrected with user approval.
+Each complete expected stdout below is authored from the agreed behavior. Do not
+replace it with captured output when a test fails. Stop on the first failure.
 
-Unsupported natural-language date scenarios have been removed. The separate
-`DateTimeValueTest` unit tests retain coverage for the date helper’s supported
-`today` and `now` keywords; these are not supported deadline commands.
+All console cases use the fixed Monday clock above. Before running a case, compile
+with `./gradlew testClasses`, set `CLASS_DIR` to the absolute main and test class
+folders joined with `:`, and enter a fresh temporary directory. Feed the exact
+Input block to the Command, then close stdin. Expected stderr is empty and the
+exit code is 0. An Initial storage block is written to `data/cheecken.txt` in that
+temporary directory before launch; otherwise begin without a task file. Expected
+storage blocks are exact file contents, including the final newline. Case 19
+runs a second process in the same temporary directory to verify reloading.
 
-### 1. Exit with `bye`
+### 1. Exit with bye
 
-- **Aim:** Verify that the application displays its welcome banner, accepts the
-  `bye` command, prints the farewell message, and exits.
-- **Command:** `./gradlew classes && CLASS_DIR="$PWD/build/classes/java/main" && TEST_DIR=$(mktemp -d) && cd "$TEST_DIR" && printf 'bye\n' | java -cp "$CLASS_DIR" cheecken.Cheecken`
+- **Aim:** Display the welcome and farewell, then exit.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  bye
-  ```
+```text
+bye
+```
 
 - **Expected output:**
 
-  ```text
-   _____ _                    _
-  /  __ \ |                  | |
-  | /  \/ |__   ___  ___  ___| | _____ _ __
-  | |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
-  | \__/\ | | |  __/  __/ (__|   <  __/ | | |
-   \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
-  ____________________________________________________________
-  Hello! I'm \033[3mCHEECKEN\033[0m.
-  What can I do for you?
-  ____________________________________________________________
-  ____________________________________________________________
-  Bye. Hope to see you again soon!
-  ____________________________________________________________
-  ```
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
-### 2. Reject an invalid index without changing state
+### 2. Reject an invalid index
 
-- **Aim:** Confirm that an invalid `mark` is rejected and does not alter a
-  previously added task.
-- **Command:** `./gradlew classes && CLASS_DIR="$PWD/build/classes/java/main" && TEST_DIR=$(mktemp -d) && cd "$TEST_DIR" && printf 'todo Read book\nmark 2\nlist\nbye\n' | java -cp "$CLASS_DIR" cheecken.Cheecken`
+- **Aim:** Leave the existing task unmarked.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  todo Read book
-  mark 2
-  list
-  bye
-  ```
+```text
+todo Read book
+mark 2
+list
+bye
+```
 
-- **Expected output:** The normal welcome banner and todo acknowledgement;
-  then the Java index error message; then `list` must show exactly one task,
-  `1.[T][ ] Read book`, still unmarked; finally the normal farewell.
+- **Expected output:**
 
-### 3. Reject malformed event input without adding a task
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] Read book
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Task index out of range
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][ ] Read book
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
-- **Aim:** Confirm that an `event` missing `/to` is rejected and leaves the
-  task list unchanged.
-- **Command:** `./gradlew classes && CLASS_DIR="$PWD/build/classes/java/main" && TEST_DIR=$(mktemp -d) && cd "$TEST_DIR" && printf 'todo Keep baseline\nevent Broken /from 15/10/2026 0900\nlist\nbye\n' | java -cp "$CLASS_DIR" cheecken.Cheecken`
+### 3. Reject an event missing /to
+
+- **Aim:** Reject incomplete event input without adding a task.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  todo Keep baseline
-  event Broken /from 15/10/2026 0900
-  list
-  bye
-  ```
+```text
+todo Keep baseline
+event Broken /from 15/10/2026 0900
+list
+bye
+```
 
-- **Expected output:** After the todo acknowledgement, print the event-input
-  error beginning `When your event starts la`; `list` must show exactly one
-  task, `1.[T][ ] Keep baseline`; then print the normal farewell.
+- **Expected output:**
 
-### 4. Reject malformed deadline input without adding a task
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] Keep baseline
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+No time how I set the task...
+Try: event meeting /from today 0900 /to tomorrow 1000.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][ ] Keep baseline
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
-- **Aim:** Confirm that a `deadline` missing `/by` is rejected and does not
-  mutate the task list.
-- **Command:** `./gradlew classes && CLASS_DIR="$PWD/build/classes/java/main" && TEST_DIR=$(mktemp -d) && cd "$TEST_DIR" && printf 'todo Keep baseline\ndeadline Broken\nlist\nbye\n' | java -cp "$CLASS_DIR" cheecken.Cheecken`
+### 4. Reject a deadline missing /by
+
+- **Aim:** Reject incomplete deadline input without adding a task.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  todo Keep baseline
-  deadline Broken
-  list
-  bye
-  ```
+```text
+todo Keep baseline
+deadline Broken
+list
+bye
+```
 
-- **Expected output:** After the todo acknowledgement, print the deadline
-  error beginning `What's a deadlined task without the deadline??`; `list`
-  must show exactly one task, `1.[T][ ] Keep baseline`; then print the normal
-  farewell.
+- **Expected output:**
 
-### 5. Reject unknown input and preserve an existing completion state
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] Keep baseline
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+No time how I set the task...
+Try: deadline report /by tomorrow 1800.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][ ] Keep baseline
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
-- **Aim:** Confirm that an unknown command is rejected and does not undo a
-  successful `mark` operation.
-- **Command:** `./gradlew classes && CLASS_DIR="$PWD/build/classes/java/main" && TEST_DIR=$(mktemp -d) && cd "$TEST_DIR" && printf 'todo Keep state\nmark 1\nwat\nlist\nbye\n' | java -cp "$CLASS_DIR" cheecken.Cheecken`
+### 5. Reject unknown input
+
+- **Aim:** Preserve the completion state after an unknown command.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  todo Keep state
-  mark 1
-  wat
-  list
-  bye
-  ```
+```text
+todo Keep state
+mark 1
+wat
+list
+bye
+```
 
-- **Expected output:** The todo acknowledgement and successful mark message;
-  then the unknown-command error beginning `What do you want?`; `list` must
-  show exactly one completed task, `1.[T][X] Keep state`; then print the normal
-  farewell.
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] Keep state
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Nice! I've marked this task as done:
+  [T][X] Keep state
+____________________________________________________________
+____________________________________________________________
+What do you want? I only understand sentences starting with `todo`, `event` and `deadline.`
+(e.g. `event her wedding /from later /to forever`)
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][X] Keep state
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
 ### 6. Reject command-name prefixes
 
-- **Aim:** Verify that a word beginning with a valid command name, such as
-  `marker`, is not interpreted as the `mark` command.
-- **Command:** `./gradlew classes && CLASS_DIR="$PWD/build/classes/java/main" && TEST_DIR=$(mktemp -d) && cd "$TEST_DIR" && printf 'todo Keep boundary\nmarker 1\nlist\nbye\n' | java -cp "$CLASS_DIR" cheecken.Cheecken`
+- **Aim:** Do not interpret marker as mark.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  todo Keep boundary
-  marker 1
-  list
-  bye
-  ```
+```text
+todo Keep boundary
+marker 1
+list
+bye
+```
 
-- **Expected output:** The todo acknowledgement; then the unknown-command
-  error beginning `What do you want?`; `list` must show exactly one unmarked
-  task, `1.[T][ ] Keep boundary`; then the normal farewell.
+- **Expected output:**
 
-### 7. Persist state-changing commands
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] Keep boundary
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+What do you want? I only understand sentences starting with `todo`, `event` and `deadline.`
+(e.g. `event her wedding /from later /to forever`)
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][ ] Keep boundary
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
-- **Aim:** Verify that adding and toggling tasks automatically writes the
-  current list to `data/cheecken.txt`.
-- **Command:** Compile and run the program with `todo read book`, `mark 1`,
-  `unmark 1`, then inspect `data/cheecken.txt`.
-- **Input:** `todo read book`, `mark 1`, `unmark 1`, `bye`.
-- **Expected output:** The file exists and contains exactly:
+### 7. Persist state changes
 
-  ```text
-  T | 0 | read book
-  ```
+- **Aim:** Persist adding, marking, and unmarking.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
 
-### 8. Empty event task
+```text
+todo read book
+mark 1
+unmark 1
+bye
+```
 
-- **Aim:** Reject `event /from /to` as an empty task before datetime parsing.
-- **Input:** `event /from /to`.
-- **Expected output:** `There's no task that is empty. LOCK INNN!` followed by
-  the event example using datetimes.
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] read book
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Nice! I've marked this task as done:
+  [T][X] read book
+____________________________________________________________
+____________________________________________________________
+OK, I've marked this task as not done yet:
+  [T][ ] read book
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+- **Expected storage:**
+
+```text
+T | 0 | read book
+```
+
+### 8. Reject an empty event
+
+- **Aim:** Report an empty description before checking dates.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+event /from /to
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+There's no task that is empty. LOCK INNN!
+(e.g. event love me /from 15/10/2025 0900 /to 15/10/3000 1100)
+```
 
 ### 9. Find tasks by keyword
 
-- **Aim:** Verify that `find <keyword>` displays every task whose description
-  contains the keyword, while preserving the task-list order and formatting.
+- **Aim:** Find matching descriptions in insertion order.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
 - **Input:**
 
-  ```text
-  todo read book
-  deadline return book /by 15/10/2025
-  find book
-  bye
-  ```
+```text
+todo read book
+deadline return book /by 15/10/2025
+find book
+bye
+```
 
-- **Expected output:** The response begins `Here are the matching tasks in
-  your list:` and includes `1.[T][ ] read book` and
-  `2.[D][ ] return book`.
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] read book
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [D][ ] return book (by: Oct 15 2025)
+Now you have 2 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Here are the matching tasks in your list:
+1.[T][ ] read book
+2.[D][ ] return book (by: Oct 15 2025)
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
 ### 10. Case-insensitive keyword search
 
-- **Aim:** Verify that searching is case-insensitive.
-- **Input:** `todo Read Book`, then `find book`, then `bye`.
-- **Expected output:** The result includes `1.[T][ ] Read Book`.
+- **Aim:** Keep existing case-insensitive search behavior.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
 
-### 11. Find with no matching tasks
+```text
+todo Read Book
+find book
+bye
+```
 
-- **Aim:** Verify that a search with no matches does not mutate the task list
-  and reports that no tasks match.
-- **Input:** `todo buy flowers`, then `find book`, then `bye`.
-- **Expected output:** `There are no matching tasks in your list.`
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] Read Book
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Here are the matching tasks in your list:
+1.[T][ ] Read Book
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+### 11. Find without matches
+
+- **Aim:** Report that no tasks match.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+todo buy flowers
+find book
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] buy flowers
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+There are no matching tasks in your list.
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
 ### 12. Find without a keyword
 
-- **Aim:** Verify that the incomplete `find` command is rejected clearly.
-- **Input:** `todo read book`, then `find`, then `bye`.
-- **Expected output:** `Please provide a keyword to search for.`
+- **Aim:** Report a missing search keyword.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
 
-### 13. Event without datetime
+```text
+todo read book
+find
+bye
+```
 
-- **Aim:** Reject an event that has a task but no `/from` or `/to` datetime.
-- **Input:** `event love me`.
-- **Expected output:** `No time how I set the task...` followed by the event
-  datetime example.
+- **Expected output:**
 
-### 14. Event with datetime
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] read book
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Please provide a keyword to search for.
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
 
-- **Aim:** Parse and display event start/end values using 12-hour time.
-- **Input:** `event love me /from 15/10/2025 0900 /to 15/10/3000 1100`.
-- **Expected output:** `Got it. I've added this task:` followed by
-  `[E][ ] love me (from: Oct 15 2025 9:00 AM to: Oct 15 3000 11:00 AM)`.
+### 13. Event without dates
+
+- **Aim:** Give a concise supported-date example.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+event love me
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+No time how I set the task...
+Try: event meeting /from today 0900 /to tomorrow 1000.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+```
+
+### 14. Existing event datetime format
+
+- **Aim:** Preserve numeric dates and 12-hour display.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+event love me /from 15/10/2025 0900 /to 15/10/3000 1100
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [E][ ] love me (from: Oct 15 2025 9:00 AM to: Oct 15 3000 11:00 AM)
+Now you have 1 tasks in the list.
+____________________________________________________________
+```
+
+### 15. Natural deadlines
+
+- **Aim:** Resolve tomorrow, a past time today, and now with the fixed Monday clock.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+deadline report /by ToMoRrOw
+deadline past /by today 0900
+deadline instant /by NOW
+list
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [D][ ] report (by: Sep 08 2026)
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [D][ ] past (by: Sep 07 2026 9:00 AM)
+Now you have 2 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [D][ ] instant (by: Sep 07 2026 3:30 PM)
+Now you have 3 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Here are the tasks in your list:
+1.[D][ ] report (by: Sep 08 2026)
+2.[D][ ] past (by: Sep 07 2026 9:00 AM)
+3.[D][ ] instant (by: Sep 07 2026 3:30 PM)
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+- **Expected storage:**
+
+```text
+D | 0 | report | 2026-09-08
+D | 0 | past | 2026-09-07T09:00
+D | 0 | instant | 2026-09-07T15:30
+```
+
+### 16. Weekdays and independent event dates
+
+- **Aim:** Move Monday seven days ahead; retain independent endpoints and reversed events.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+event meeting /from Mon 0900 /to MONDAY 1000
+event reverse /from tomorrow /to today
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [E][ ] meeting (from: Sep 14 2026 9:00 AM to: Sep 14 2026 10:00 AM)
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [E][ ] reverse (from: Sep 08 2026 to: Sep 07 2026)
+Now you have 2 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+### 17. Reject unsupported natural expressions
+
+- **Aim:** Leave saved state unchanged for invalid phrases, times, and now suffixes.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+todo keep
+deadline bad /by next Monday
+deadline bad /by today 2400
+deadline bad /by now 0900
+event bad /from today /to yesterday
+list
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [T][ ] keep
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+No time how I set the task...
+Try: deadline report /by tomorrow 1800.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+No time how I set the task...
+Try: deadline report /by tomorrow 1800.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+No time how I set the task...
+Try: deadline report /by tomorrow 1800.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+No time how I set the task...
+Try: event meeting /from today 0900 /to tomorrow 1000.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][ ] keep
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+- **Expected storage:**
+
+```text
+T | 0 | keep
+```
+
+### 18. Retain lowercase exact flags
+
+- **Aim:** Reject uppercase flags and longer flag-like words.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+deadline bad /BY tomorrow
+deadline bad /byx today
+event bad /FROM today /to tomorrow
+event bad /from today /TO tomorrow
+list
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+No time how I set the task...
+Try: deadline report /by tomorrow 1800.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+No time how I set the task...
+Try: deadline report /by tomorrow 1800.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+No time how I set the task...
+Try: event meeting /from today 0900 /to tomorrow 1000.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+No time how I set the task...
+Try: event meeting /from today 0900 /to tomorrow 1000.
+Dates: d/M/yyyy, today, tomorrow, Mon–Sun (or full names); optional HHmm. Or now.
+____________________________________________________________
+Here are the tasks in your list:
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+### 19. Save and reopen date-only values
+
+- **Aim:** Keep a date-only deadline distinct from explicit midnight in a second process.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Input:**
+
+```text
+deadline date /by tomorrow
+deadline midnight /by tomorrow 0000
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [D][ ] date (by: Sep 08 2026)
+Now you have 1 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Got it. I've added this task:
+  [D][ ] midnight (by: Sep 08 2026 12:00 AM)
+Now you have 2 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+- **Expected storage:**
+
+```text
+D | 0 | date | 2026-09-08
+D | 0 | midnight | 2026-09-08T00:00
+```
+
+- **Restart input:**
+
+```text
+list
+bye
+```
+
+- **Restart expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Here are the tasks in your list:
+1.[D][ ] date (by: Sep 08 2026)
+2.[D][ ] midnight (by: Sep 08 2026 12:00 AM)
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```
+
+### 20. Load old records and skip stored natural words
+
+- **Aim:** Retain old absolute records without reinterpreting malformed relative records.
+- **Command:** `java -ea -cp "$CLASS_DIR" cheecken.FixedClockCli`
+- **Initial storage:**
+
+```text
+D | 0 | skip relative | tomorrow
+E | 0 | skip relative | Mon | 2026-09-09
+D | 1 | old midnight | 2026-09-07T00:00
+D | 0 | old date | 2026-09-08
+```
+
+- **Input:**
+
+```text
+list
+bye
+```
+
+- **Expected output:**
+
+```text
+ _____ _                    _
+/  __ \ |                  | |
+| /  \/ |__   ___  ___  ___| | _____ _ __
+| |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
+| \__/\ | | |  __/  __/ (__|   <  __/ | | |
+ \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
+____________________________________________________________
+Hello! I'm \033[3mCHEECKEN\033[0m.
+What can I do for you?
+____________________________________________________________
+____________________________________________________________
+Here are the tasks in your list:
+1.[D][X] old midnight (by: Sep 07 2026 12:00 AM)
+2.[D][ ] old date (by: Sep 08 2026)
+____________________________________________________________
+____________________________________________________________
+Bye. Hope to see you again soon!
+____________________________________________________________
+```

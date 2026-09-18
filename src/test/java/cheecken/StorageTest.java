@@ -55,4 +55,37 @@ class StorageTest {
         assertTrue(storage.load().isEmpty());
         assertTrue(errors.isEmpty());
     }
+
+    @Test
+    void saveAndLoad_dateOnlyAndExplicitMidnight_remainDistinct() {
+        Storage storage = new Storage(directory.resolve("tasks.txt").toString());
+        List<Task> tasks = List.of(new Deadline("date only", "2026-09-04"),
+                new Deadline("midnight", "2026-09-04T00:00"),
+                new Event("mixed", "2026-09-04", "2026-09-05T00:00"));
+
+        storage.save(tasks);
+
+        assertEquals(tasks.stream().map(Task::toString).toList(),
+                storage.load().stream().map(Task::toString).toList());
+        assertEquals("D | 0 | date only | 2026-09-04", storage.load().get(0).toStorageString());
+    }
+
+    @Test
+    void load_naturalDates_skipsRecordsWithoutReinterpretingThem() throws Exception {
+        Path file = directory.resolve("tasks.txt");
+        Files.writeString(file, """
+                D | 0 | relative | today
+                D | 0 | relative time | now
+                E | 0 | relative start | Mon | 2026-09-05
+                E | 0 | relative end | 2026-09-04 | tomorrow
+                D | 1 | legacy midnight | 2026-09-04T00:00
+                D | 0 | legacy numeric | 4/9/2026 0900
+                T | 0 | survivor
+                """);
+        List<Task> tasks = new Storage(file.toString()).load();
+
+        assertEquals(List.of("[D][X] legacy midnight (by: Sep 04 2026 12:00 AM)",
+                "[D][ ] legacy numeric (by: Sep 04 2026 9:00 AM)", "[T][ ] survivor"),
+                tasks.stream().map(Task::toString).toList());
+    }
 }

@@ -77,8 +77,11 @@ public class Storage {
             }
             Task task = switch (fields[0]) {
                 case "T" -> new Todo(fields[2]);
-                case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
-                case "E" -> fields.length >= 5 ? new Event(fields[2], fields[3], fields[4]) : null;
+                case "D" -> fields.length >= 4
+                        ? new Deadline(fields[2], DateTimeValue.parseAbsolute(fields[3], "deadline")) : null;
+                case "E" -> fields.length >= 5 ? new Event(fields[2],
+                        DateTimeValue.parseAbsolute(fields[3], "event"),
+                        DateTimeValue.parseAbsolute(fields[4], "event")) : null;
                 default -> null;
             };
             if (task != null && fields[1].equals("1")) {

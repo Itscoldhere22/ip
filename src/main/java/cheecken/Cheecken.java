@@ -1,6 +1,9 @@
 package cheecken;
 
+import java.time.Clock;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -9,6 +12,7 @@ import java.util.stream.Collectors;
 public class Cheecken {
     private final TaskList list = new TaskList();
     private final Storage storage;
+    private final Clock clock;
     private final Parser parser = new Parser();
     private final Ui ui;
     private final StringBuilder response = new StringBuilder();
@@ -26,6 +30,14 @@ public class Cheecken {
      * Creates an independent chatbot with a chosen persistence file.
      */
     public Cheecken(String filePath) {
+        this(filePath, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Creates a chatbot with a supplied clock for deterministic date resolution.
+     */
+    public Cheecken(String filePath, Clock clock) {
+        this.clock = clock;
         ui = new Ui(this::appendResponse);
         storage = new Storage(filePath, this::appendResponse);
     }
@@ -82,6 +94,7 @@ public class Cheecken {
     private boolean executeCommand(String rawInput) {
         // Both entry points must load persisted tasks before accepting commands.
         assert isLoaded : "Tasks must be loaded before processing commands";
+        Clock commandClock = Clock.fixed(clock.instant(), clock.getZone());
         String input = parser.normalize(rawInput);
         CommandType command = parser.parseCommand(input);
         try {
@@ -93,8 +106,8 @@ public class Cheecken {
                 case LIST -> handleList();
                 case MARK -> handleMark(input);
                 case UNMARK -> handleUnmark(input);
-                case DEADLINE -> handleDeadline(input);
-                case EVENT -> handleEvent(input);
+                case DEADLINE -> handleDeadline(input, commandClock);
+                case EVENT -> handleEvent(input, commandClock);
                 case TODO -> handleTodo(input);
                 case DELETE -> handleDelete(input);
                 case FIND -> handleFind(input);
@@ -169,56 +182,53 @@ public class Cheecken {
     /**
      * Creates and stores a deadline task from the command text.
      * @param input complete deadline command
+     * @param commandClock time captured when the command was submitted
      * @return false to continue the command loop
      */
-    private boolean handleDeadline(String input) {
-        int slash = input.indexOf("/");
-        if (slash == -1) {
-            if (input.substring(8).isBlank()) {
-                throw new CheeckenEmptyException("deadline");
-            }
-            throw new CheeckenDateTimeException("deadline");
-        }
-        String taskText = input.substring(8, slash).strip();
-        if (taskText.isBlank()) {
+    private boolean handleDeadline(String input, Clock commandClock) {
+        String details = input.substring("deadline".length()).strip();
+        int by = findFlag(details, "/by");
+        if (details.isBlank() || by == 0) {
             throw new CheeckenEmptyException("deadline");
         }
-        if (input.substring(slash + 3).isBlank()) {
+        if (by == -1) {
             throw new CheeckenDateTimeException("deadline");
         }
-        String deadline = input.substring(slash + 4);
-        addTask(new Deadline(taskText, deadline));
+        String taskText = details.substring(0, by).strip();
+        String deadline = details.substring(by + "/by".length()).strip();
+        addTask(new Deadline(taskText, DateTimeValue.parse(deadline, "deadline", commandClock)));
         return false;
     }
 
     /**
      * Creates and stores an event task from the command text.
      * @param input complete event command
+     * @param commandClock shared reference time for both event endpoints
      * @return false to continue the command loop
      */
-    private boolean handleEvent(String input) {
-        int from = input.indexOf("/from");
-        int to = input.indexOf("/to");
-        if (from == -1) {
-            if (input.substring(5).isBlank()) {
-                throw new CheeckenEmptyException("event");
-            }
-            throw new CheeckenDateTimeException("event");
-        }
-        String taskText = input.substring(5, from).strip();
-        if (taskText.isBlank()) {
+    private boolean handleEvent(String input, Clock commandClock) {
+        String details = input.substring("event".length()).strip();
+        int from = findFlag(details, "/from");
+        int to = findFlag(details, "/to");
+        if (details.isBlank() || from == 0) {
             throw new CheeckenEmptyException("event");
         }
-        if (to == -1) {
+        if (from == -1 || to < from + "/from".length()) {
             throw new CheeckenDateTimeException("event");
         }
-        if (input.substring(from + 5, to).isBlank() || input.substring(to + 3).isBlank()) {
-            throw new CheeckenDateTimeException("event");
-        }
-        String start = input.substring(from + 5, to).strip();
-        String end = input.substring(to + 3).strip();
-        addTask(new Event(taskText, start, end));
+        String taskText = details.substring(0, from).strip();
+        String start = details.substring(from + "/from".length(), to).strip();
+        String end = details.substring(to + "/to".length()).strip();
+        addTask(new Event(taskText, start, end, commandClock));
         return false;
+    }
+
+    /**
+     * Finds an exact lowercase flag token, excluding words such as /byx and /today.
+     */
+    private int findFlag(String input, String flag) {
+        Matcher matcher = Pattern.compile("(?<!\\S)" + Pattern.quote(flag) + "(?=\\s|$)").matcher(input);
+        return matcher.find() ? matcher.start() : -1;
     }
 
     /**

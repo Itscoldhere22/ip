@@ -1,52 +1,24 @@
 package cheecken;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Locale;
-
 /**
  * Represents a task that must be completed by a date or date-time.
  */
 public class Deadline extends Task {
-    protected LocalDateTime deadline;
-    private final boolean hasExplicitTime;
+    private final DateTimeValue deadline;
 
     /**
-     * Creates a deadline after parsing its date or date-time.
+     * Creates a deadline after parsing its date or date-time using the local clock.
      */
     public Deadline(String task, String deadline) {
-        super(task);
-        this.hasExplicitTime = deadline.trim().contains(" ") || deadline.contains("T");
-        this.deadline = parseDateTime(deadline);
+        this(task, DateTimeValue.parse(deadline, "deadline"));
     }
 
     /**
-     * Parses supported date formats or reports invalid input.
+     * Creates a deadline from a value already resolved by command handling or storage.
      */
-    private static LocalDateTime parseDateTime(String value) {
-        try {
-            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } catch (DateTimeParseException ignored) {
-            // Try the next supported format.
-        }
-        try {
-            return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy HHmm"));
-        } catch (DateTimeParseException ignored) {
-            // Try the next supported format.
-        }
-        try {
-            return LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay();
-        } catch (DateTimeParseException ignored) {
-            // Try the next supported format.
-        }
-        try {
-            return LocalDateTime.parse(value + "T00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } catch (DateTimeParseException ignored) {
-            // Fall through to the user-facing exception.
-        }
-        throw new CheeckenDateTimeException("deadline");
+    Deadline(String task, DateTimeValue deadline) {
+        super(task);
+        this.deadline = deadline;
     }
 
     /**
@@ -54,16 +26,14 @@ public class Deadline extends Task {
      */
     @Override
     public String toString() {
-        String pattern = hasExplicitTime ? "MMM dd yyyy h:mm a" : "MMM dd yyyy";
-        return "[D]" + super.toString() + " (by: "
-                + deadline.format(DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH)) + ")";
+        return "[D]" + super.toString() + " (by: " + deadline.display() + ")";
     }
 
     /**
-     * Serializes the deadline task.
+     * Serializes the resolved deadline, preserving whether a time was supplied.
      */
     @Override
     public String toStorageString() {
-        return "D | " + (isMarked ? "1" : "0") + " | " + task + " | " + deadline;
+        return "D | " + (isMarked ? "1" : "0") + " | " + task + " | " + deadline.storage();
     }
 }

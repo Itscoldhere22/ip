@@ -45,7 +45,16 @@ class CheeckenUiTest {
                 "There are no matching tasks in your list."),
             Arguments.of("Find without a keyword is rejected",
                 "todo read book\nfind\nbye\n",
-                "Please provide a keyword to search for."));
+                "Please provide a keyword to search for."),
+            Arguments.of("Natural deadline resolves on a fixed Monday",
+                "deadline report /by tomorrow\nbye\n", "[D][ ] report (by: Sep 08 2026)"),
+            Arguments.of("Same weekday advances seven days",
+                "event meeting /from Mon 0900 /to MONDAY 1000\nbye\n",
+                "from: Sep 14 2026 9:00 AM to: Sep 14 2026 10:00 AM"),
+            Arguments.of("Past time today is accepted",
+                "deadline earlier /by today 0900\nbye\n", "Sep 07 2026 9:00 AM"),
+            Arguments.of("Now uses the command time",
+                "deadline instant /by NOW\nbye\n", "Sep 07 2026 3:30 PM"));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -92,7 +101,8 @@ class CheeckenUiTest {
      * Builds an application process isolated from real user data.
      */
     private static ProcessBuilder process(String input, Path dir) {
-        return new ProcessBuilder("java", "-cp", System.getProperty("java.class.path"), "cheecken.Cheecken")
+        String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
+        return new ProcessBuilder(java, "-ea", "-cp", System.getProperty("java.class.path"), "cheecken.FixedClockCli")
                 .directory(dir.toFile()).redirectErrorStream(true).redirectInput(ProcessBuilder.Redirect.PIPE);
     }
 }
