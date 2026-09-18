@@ -51,32 +51,43 @@ public class Storage {
         }
         try {
             for (String line : Files.readAllLines(file)) {
-                try {
-                    String[] fields = line.split("\\s*\\|\\s*", -1);
-                    if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
-                        continue;
-                    }
-                    Task task = switch (fields[0]) {
-                        case "T" -> new Todo(fields[2]);
-                        case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
-                        case "E" -> fields.length >= 5
-                            ? new Event(fields[2], fields[3], fields[4]) : null;
-                        default -> null;
-                    };
-                    if (task == null) {
-                        continue;
-                    }
-                    if (fields[1].equals("1")) {
-                        task.mark();
-                    }
+                Task task = parseRecord(line);
+                if (task != null) {
                     tasks.add(task);
-                } catch (RuntimeException ignored) {
-                    // Ignore malformed records and continue loading valid ones.
                 }
             }
         } catch (IOException | SecurityException e) {
             reportError.accept("Unable to load tasks: " + e.getMessage());
         }
         return tasks;
+    }
+
+    /**
+     * Restores one task and its completion state, or returns null for a malformed record.
+     */
+    private Task parseRecord(String line) {
+        try {
+            String[] fields = line.split("\\s*\\|\\s*", -1);
+            if (fields.length < 3) {
+                return null;
+            }
+            boolean isValidStatus = fields[1].equals("0") || fields[1].equals("1");
+            if (!isValidStatus) {
+                return null;
+            }
+            Task task = switch (fields[0]) {
+                case "T" -> new Todo(fields[2]);
+                case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
+                case "E" -> fields.length >= 5 ? new Event(fields[2], fields[3], fields[4]) : null;
+                default -> null;
+            };
+            if (task != null && fields[1].equals("1")) {
+                task.mark();
+            }
+            return task;
+        } catch (RuntimeException ignored) {
+            // A malformed record must not prevent later valid records from loading.
+            return null;
+        }
     }
 }
