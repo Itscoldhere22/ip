@@ -162,7 +162,7 @@ public class Cheecken {
         if (taskText.isBlank()) {
             throw new CheeckenEmptyException("todo");
         }
-        addTask(storeMsg(taskText));
+        addTask(new Todo(taskText));
         return 0;
     }
 
@@ -187,7 +187,7 @@ public class Cheecken {
             throw new CheeckenDateTimeException("deadline");
         }
         String deadline = input.substring(slash + 4);
-        addTask(storeMsg(taskText, deadline));
+        addTask(new Deadline(taskText, deadline));
         return 0;
     }
 
@@ -217,7 +217,7 @@ public class Cheecken {
         }
         String start = input.substring(from + 5, to).strip();
         String end = input.substring(to + 3).strip();
-        addTask(storeMsg(taskText, start, end));
+        addTask(new Event(taskText, start, end));
         return 0;
     }
 
@@ -245,56 +245,16 @@ public class Cheecken {
     }
 
     /**
-     * Displays confirmation after a task has been added.
-     * @param task newly added task
+     * Adds and persists a task before displaying confirmation.
+     * @param task task to add
      */
     private void addTask(Task task) {
-        // Each storeMsg overload must append the task before confirming it.
+        list.add(task);
+        saveTasks();
+        // Confirmation must describe the task just appended to the list.
         assert list.size() > 0 && list.get(list.size() - 1) == task
                 : "The added task must be the last task in the list";
         ui.showAdded(task, list.size());
-    }
-
-    /**
-     * Creates and persists a todo task.
-     * @param task task description
-     * @return created todo task
-     */
-    private Todo storeMsg(String task) {
-        Todo newTodo = new Todo(task);
-        list.add(newTodo);
-        saveTasks();
-
-        return newTodo;
-    }
-
-    /**
-     * Creates and persists a deadline task.
-     * @param task task description
-     * @param deadline deadline value
-     * @return created deadline task
-     */
-    private Deadline storeMsg(String task, String deadline) {
-        Deadline newDeadline = new Deadline(task, deadline);
-        list.add(newDeadline);
-        saveTasks();
-
-        return newDeadline;
-    }
-
-    /**
-     * Creates and persists an event task.
-     * @param task task description
-     * @param startTime event start value
-     * @param endTime event end value
-     * @return created event task
-     */
-    private Event storeMsg(String task, String startTime, String endTime) {
-        Event newEvent = new Event(task, startTime, endTime);
-        list.add(newEvent);
-        saveTasks();
-
-        return newEvent;
     }
 
     /**
