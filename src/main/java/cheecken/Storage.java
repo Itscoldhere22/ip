@@ -5,18 +5,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Loads and saves task records in the application's persistence file.
  */
 public class Storage {
     private final Path file;
+    private final Consumer<String> reportError;
 
     /**
      * Creates storage backed by the supplied relative or absolute path.
      */
     public Storage(String filePath) {
+        this(filePath, System.out::println);
+    }
+
+    /**
+     * Creates storage with an error destination shared by the console or GUI.
+     */
+    public Storage(String filePath, Consumer<String> reportError) {
         this.file = Path.of(filePath);
+        this.reportError = reportError;
     }
 
     /**
@@ -24,10 +34,10 @@ public class Storage {
      */
     public void save(List<Task> tasks) {
         try {
-            Files.createDirectories(file.getParent());
+            Files.createDirectories(file.toAbsolutePath().getParent());
             Files.write(file, tasks.stream().map(Task::toStorageString).toList());
         } catch (IOException | SecurityException e) {
-            System.out.println("Unable to save tasks: " + e.getMessage());
+            reportError.accept("Unable to save tasks: " + e.getMessage());
         }
     }
 
@@ -65,7 +75,7 @@ public class Storage {
                 }
             }
         } catch (IOException | SecurityException e) {
-            System.out.println("Unable to load tasks: " + e.getMessage());
+            reportError.accept("Unable to load tasks: " + e.getMessage());
         }
         return tasks;
     }

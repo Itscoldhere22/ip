@@ -1,0 +1,144 @@
+package cheecken;
+
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+/**
+ * Builds a small chat window and forwards commands to the independent chatbot.
+ */
+public class Main extends Application {
+    private final Cheecken chatbot;
+    private final VBox conversation = new VBox(14);
+    private final TextField input = new TextField();
+    private final Button send = new Button("Send");
+    private final Label status = new Label("Enter to send • Tasks saved on this device");
+
+    /**
+     * Creates the normal desktop application.
+     */
+    public Main() {
+        this(new Cheecken());
+    }
+
+    /**
+     * Supplies an isolated chatbot for GUI acceptance tests.
+     */
+    Main(Cheecken chatbot) {
+        this.chatbot = chatbot;
+    }
+
+    /**
+     * Creates the conversation, command guide, and input controls.
+     */
+    @Override
+    public void start(Stage stage) {
+        Label title = new Label("Cheecken");
+        title.getStyleClass().add("title");
+        Label subtitle = new Label("A little help with your everyday tasks.");
+        subtitle.getStyleClass().add("muted");
+        VBox header = new VBox(5, title, subtitle, createGuide());
+        header.getStyleClass().add("header");
+
+        conversation.setPadding(new Insets(20));
+        ScrollPane scroll = new ScrollPane(conversation);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        conversation.heightProperty().addListener((observable, oldHeight, newHeight) -> scroll.setVvalue(1));
+
+        input.setId("commandInput");
+        input.setPromptText("Try: todo read a book");
+        input.setAccessibleText("Task command");
+        input.setOnAction(event -> handleUserInput(stage));
+        send.setId("sendButton");
+        send.setOnAction(event -> handleUserInput(stage));
+        send.disableProperty().bind(input.textProperty().isEmpty().or(input.disabledProperty()));
+        HBox composer = new HBox(10, input, send);
+        HBox.setHgrow(input, Priority.ALWAYS);
+        status.getStyleClass().add("muted");
+        status.setWrapText(true);
+        VBox footer = new VBox(8, composer, status);
+        footer.getStyleClass().add("footer");
+
+        BorderPane root = new BorderPane(scroll, header, null, footer, null);
+        Scene scene = new Scene(root, 620, 720);
+        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());
+        stage.setTitle("Cheecken — your task companion");
+        stage.setMinWidth(420);
+        stage.setMinHeight(480);
+        stage.setScene(scene);
+        addMessage("Cheecken", "Hello! What can I help you remember?\n"
+                + "Try todo read a book, or list to see your saved tasks.", false);
+        String warning = chatbot.initialize();
+        if (!warning.isBlank()) {
+            addMessage("Cheecken", warning, false);
+        }
+        stage.show();
+        Platform.runLater(input::requestFocus);
+    }
+
+    /**
+     * Displays command examples without requiring a separate help window.
+     */
+    private TitledPane createGuide() {
+        Label examples = new Label("todo read a book\n"
+                + "deadline submit report /by 15/10/2026 1800\n"
+                + "event meeting /from 15/10/2026 0900 /to 15/10/2026 1000\n"
+                + "list • find book • mark 1 • unmark 1 • delete 1 • bye\n"
+                + "Dates: d/M/yyyy, optionally followed by HHmm.");
+        examples.setWrapText(true);
+        examples.setMaxWidth(Double.MAX_VALUE);
+        TitledPane guide = new TitledPane("Command guide", examples);
+        guide.setExpanded(false);
+        guide.setAnimated(false);
+        return guide;
+    }
+
+    /**
+     * Sends a nonblank command once and closes the window after bye.
+     */
+    private void handleUserInput(Stage stage) {
+        String command = input.getText().strip();
+        if (command.isEmpty() || chatbot.isFinished()) {
+            return;
+        }
+        addMessage("You", command, true);
+        addMessage("Cheecken", chatbot.getResponse(command), false);
+        input.clear();
+        if (chatbot.isFinished()) {
+            stage.close();
+        } else {
+            input.requestFocus();
+        }
+    }
+
+    /**
+     * Adds a wrapping message with a visible speaker label and distinct alignment.
+     */
+    private void addMessage(String speaker, String text, boolean isUser) {
+        Label name = new Label(speaker);
+        name.getStyleClass().add("speaker");
+        Label message = new Label(text);
+        message.setWrapText(true);
+        message.setMinWidth(0);
+        message.setMaxWidth(Double.MAX_VALUE);
+        VBox bubble = new VBox(5, name, message);
+        bubble.getStyleClass().add(isUser ? "user-message" : "bot-message");
+        bubble.maxWidthProperty().bind(conversation.widthProperty().subtract(65));
+        HBox row = new HBox(bubble);
+        row.setAlignment(isUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        conversation.getChildren().add(row);
+    }
+}

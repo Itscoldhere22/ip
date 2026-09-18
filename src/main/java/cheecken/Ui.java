@@ -1,6 +1,7 @@
 package cheecken;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Handles all user-facing console output.
@@ -8,11 +9,27 @@ import java.util.List;
 public class Ui {
     private static final String SEPARATOR = "____________________________________________________________";
 
+    private final Consumer<String> output;
+
+    /**
+     * Creates the console output adapter.
+     */
+    public Ui() {
+        this(System.out::println);
+    }
+
+    /**
+     * Sends formatted messages to the supplied output destination.
+     */
+    public Ui(Consumer<String> output) {
+        this.output = output;
+    }
+
     /**
      * Prints the welcome banner.
      */
     public void showWelcome() {
-        System.out.println(" _____ _                    _              \n"
+        output.accept(" _____ _                    _              \n"
                 + "/  __ \\ |                  | |             \n"
                 + "| /  \\/ |__   ___  ___  ___| | _____ _ __  \n"
                 + "| |   | '_ \\ / _ \\/ _ \\/ __| |/ / _ \\ '_ \\ \n"
@@ -26,41 +43,41 @@ public class Ui {
      * Prints the farewell message.
      */
     public void showBye() {
-        System.out.println(SEPARATOR + "\nBye. Hope to see you again soon!\n" + SEPARATOR);
+        output.accept(SEPARATOR + "\nBye. Hope to see you again soon!\n" + SEPARATOR);
     }
 
     /**
      * Prints the current task list.
      */
     public void showList(List<Task> tasks) {
-        System.out.println(SEPARATOR + "\nHere are the tasks in your list:");
+        output.accept(SEPARATOR + "\nHere are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
-            System.out.println((i + 1) + "." + tasks.get(i));
+            output.accept((i + 1) + "." + tasks.get(i));
         }
-        System.out.println(SEPARATOR);
+        output.accept(SEPARATOR);
     }
 
     /**
      * Displays tasks matching a search keyword, or a no-match message.
      */
     public void showFind(List<Task> matches) {
-        System.out.println(SEPARATOR);
+        output.accept(SEPARATOR);
         if (matches.isEmpty()) {
-            System.out.println("There are no matching tasks in your list.");
+            output.accept("There are no matching tasks in your list.");
         } else {
-            System.out.println("Here are the matching tasks in your list:");
+            output.accept("Here are the matching tasks in your list:");
             for (int i = 0; i < matches.size(); i++) {
-                System.out.println((i + 1) + "." + matches.get(i));
+                output.accept((i + 1) + "." + matches.get(i));
             }
         }
-        System.out.println(SEPARATOR);
+        output.accept(SEPARATOR);
     }
 
     /**
      * Prints a task-created confirmation.
      */
     public void showAdded(Task task, int count) {
-        System.out.println(SEPARATOR + "\nGot it. I've added this task:\n  " + task
+        output.accept(SEPARATOR + "\nGot it. I've added this task:\n  " + task
                 + "\nNow you have " + count + " tasks in the list.\n" + SEPARATOR);
     }
 
@@ -68,14 +85,14 @@ public class Ui {
      * Prints a task status or deletion confirmation.
      */
     public void showTaskMessage(String message, Task task) {
-        System.out.println(SEPARATOR + "\n" + message + "\n  " + task + "\n" + SEPARATOR);
+        output.accept(SEPARATOR + "\n" + message + "\n  " + task + "\n" + SEPARATOR);
     }
 
     /**
      * Prints a formatted error message.
      */
     public void showError(Exception exception) {
-        System.out.println(SEPARATOR);
-        System.out.println(exception.getMessage());
+        output.accept(SEPARATOR);
+        output.accept(exception.getMessage());
     }
 }

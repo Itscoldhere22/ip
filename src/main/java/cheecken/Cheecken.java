@@ -1,22 +1,85 @@
 package cheecken;
 
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 /**
  * Runs the Cheecken chatbot and coordinates command handling, storage, and UI.
  */
 public class Cheecken {
-    private static final TaskList list = new TaskList();
-    private static final Storage storage = new Storage("data/cheecken.txt");
-    private static final Parser parser = new Parser();
-    private static final Ui ui = new Ui();
+    private final TaskList list = new TaskList();
+    private final Storage storage;
+    private final Parser parser = new Parser();
+    private final Ui ui;
+    private final StringBuilder response = new StringBuilder();
+    private boolean isFinished;
+    private boolean isLoaded;
+
+    /**
+     * Creates a chatbot using the normal persistence file.
+     */
+    public Cheecken() {
+        this("data/cheecken.txt");
+    }
+
+    /**
+     * Creates an independent chatbot with a chosen persistence file.
+     */
+    public Cheecken(String filePath) {
+        ui = new Ui(this::appendResponse);
+        storage = new Storage(filePath, this::appendResponse);
+    }
+
+    /**
+     * Adds output to the current response without redirecting global console streams.
+     */
+    private void appendResponse(String message) {
+        response.append(message).append("\n");
+    }
+
+    /**
+     * Loads persisted tasks once and returns any startup warnings.
+     */
+    public String initialize() {
+        response.setLength(0);
+        if (!isLoaded) {
+            loadTasks();
+            isLoaded = true;
+        }
+        return response.toString().strip();
+    }
+
+    /**
+     * Executes one command and returns plain text for a chat bubble.
+     */
+    public String getResponse(String input) {
+        response.setLength(0);
+        if (isFinished) {
+            return "This conversation has ended. Close the window to exit.";
+        }
+        if (!isLoaded) {
+            loadTasks();
+            isLoaded = true;
+        }
+        isFinished = echo(input) == 1;
+        return response.toString().lines()
+                .filter(line -> !line.equals("____________________________________________________________"))
+                .collect(Collectors.joining("\n")).strip();
+    }
+
+    /**
+     * Returns whether the user has ended the conversation with bye.
+     */
+    public boolean isFinished() {
+        return isFinished;
+    }
 
     /**
      * Processes one raw command and returns whether the chatbot should exit.
      * @param rawInput command entered by the user
      * @return 1 when the command requests exit; otherwise 0
      */
-    private static int echo(String rawInput) {
+    private int echo(String rawInput) {
         String input = parser.normalize(rawInput);
         CommandType command = parser.parseCommand(input);
         try {
@@ -44,7 +107,7 @@ public class Cheecken {
      * Displays the farewell message.
      * @return 1 to terminate the command loop
      */
-    private static int handleBye() {
+    private int handleBye() {
         ui.showBye();
         return 1;
     }
@@ -53,7 +116,7 @@ public class Cheecken {
      * Displays all tasks currently in the task list.
      * @return 0 to continue the command loop
      */
-    private static int handleList() {
+    private int handleList() {
         ui.showList(list.asList());
         return 0;
     }
@@ -63,7 +126,7 @@ public class Cheecken {
      * @param input complete mark command
      * @return 0 to continue the command loop
      */
-    private static int handleMark(String input) {
+    private int handleMark(String input) {
         Task task = list.get(parseIndex(input, "mark"));
         task.mark();
         saveTasks();
@@ -76,7 +139,7 @@ public class Cheecken {
      * @param input complete unmark command
      * @return 0 to continue the command loop
      */
-    private static int handleUnmark(String input) {
+    private int handleUnmark(String input) {
         Task task = list.get(parseIndex(input, "unmark"));
         task.unmark();
         saveTasks();
@@ -89,7 +152,7 @@ public class Cheecken {
      * @param input complete todo command
      * @return 0 to continue the command loop
      */
-    private static int handleTodo(String input) {
+    private int handleTodo(String input) {
         if (input.length() <= 4) {
             throw new CheeckenEmptyException("todo");
         }
@@ -106,7 +169,7 @@ public class Cheecken {
      * @param input complete deadline command
      * @return 0 to continue the command loop
      */
-    private static int handleDeadline(String input) {
+    private int handleDeadline(String input) {
         int slash = input.indexOf("/");
         if (slash == -1) {
             if (input.substring(8).isBlank()) {
@@ -131,7 +194,7 @@ public class Cheecken {
      * @param input complete event command
      * @return 0 to continue the command loop
      */
-    private static int handleEvent(String input) {
+    private int handleEvent(String input) {
         int from = input.indexOf("/from");
         int to = input.indexOf("/to");
         if (from == -1) {
@@ -161,7 +224,7 @@ public class Cheecken {
      * @param input complete delete command
      * @return 0 to continue the command loop
      */
-    private static int handleDelete(String input) {
+    private int handleDelete(String input) {
         Task task = deleteTask(parseIndex(input, "delete"));
         ui.showTaskMessage("Noted. I've removed this task:", task);
         return 0;
@@ -170,7 +233,7 @@ public class Cheecken {
     /**
      * Displays tasks matching the supplied nonempty search keyword.
      */
-    private static int handleFind(String input) {
+    private int handleFind(String input) {
         String keyword = input.substring("find".length()).strip();
         if (keyword.isBlank()) {
             throw new CheeckenFindException();
@@ -183,7 +246,7 @@ public class Cheecken {
      * Displays confirmation after a task has been added.
      * @param task newly added task
      */
-    private static void addTask(Task task) {
+    private void addTask(Task task) {
         ui.showAdded(task, list.size());
     }
 
@@ -192,7 +255,7 @@ public class Cheecken {
      * @param task task description
      * @return created todo task
      */
-    private static Todo storeMsg(String task) {
+    private Todo storeMsg(String task) {
         Todo newTodo = new Todo(task);
         list.add(newTodo);
         saveTasks();
@@ -206,7 +269,7 @@ public class Cheecken {
      * @param deadline deadline value
      * @return created deadline task
      */
-    private static Deadline storeMsg(String task, String deadline) {
+    private Deadline storeMsg(String task, String deadline) {
         Deadline newDeadline = new Deadline(task, deadline);
         list.add(newDeadline);
         saveTasks();
@@ -221,7 +284,7 @@ public class Cheecken {
      * @param endTime event end value
      * @return created event task
      */
-    private static Event storeMsg(String task, String startTime, String endTime) {
+    private Event storeMsg(String task, String startTime, String endTime) {
         Event newEvent = new Event(task, startTime, endTime);
         list.add(newEvent);
         saveTasks();
@@ -234,7 +297,7 @@ public class Cheecken {
      * @param taskIndex zero-based task index
      * @return removed task
      */
-    private static Task deleteTask(int taskIndex) {
+    private Task deleteTask(int taskIndex) {
         Task task = list.remove(taskIndex);
         saveTasks();
         return task;
@@ -246,7 +309,7 @@ public class Cheecken {
      * @param command command keyword
      * @return zero-based task index
      */
-    private static int parseIndex(String input, String command) {
+    private int parseIndex(String input, String command) {
         String value = input.substring(command.length()).strip();
         int index = Integer.parseInt(value) - 1;
         if (index < 0 || index >= list.size()) {
@@ -258,18 +321,18 @@ public class Cheecken {
     /**
      * Persists the current task list, reporting storage failures to the user.
      */
-    private static void saveTasks() {
+    private void saveTasks() {
         try {
             storage.save(list.asList());
         } catch (RuntimeException e) {
-            System.out.println("Unable to save tasks: " + e.getMessage());
+            appendResponse("Unable to save tasks: " + e.getMessage());
         }
     }
 
     /**
      * Loads valid persisted tasks when the chatbot starts.
      */
-    private static void loadTasks() {
+    private void loadTasks() {
         storage.load().forEach(list::add);
     }
 
@@ -277,15 +340,18 @@ public class Cheecken {
      * Starts the interactive chatbot loop and processes commands until exit.
      */
     public void run() {
-        loadTasks();
+        initialize();
         ui.showWelcome();
+        System.out.print(response);
         Scanner scanner = new Scanner(System.in);
         while (true) {
             if (!scanner.hasNextLine()) {
                 break;
             }
             String input = scanner.nextLine();
+            response.setLength(0);
             int echoRes = echo(input);
+            System.out.print(response);
             if (echoRes == 1) {
                 break;
             }

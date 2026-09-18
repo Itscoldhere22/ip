@@ -12,10 +12,7 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
-    maven {
-        url = uri('https://repo.maven.apache.org/maven2/')
-    }
+    mavenCentral()
 }
 
 checkstyle {
@@ -23,6 +20,21 @@ checkstyle {
 }
 
 dependencies {
+    String javaFxVersion = '17.0.7'
+
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:linux")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:linux")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:linux")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:linux")
+
     testImplementation libs.org.junit.jupiter.junit.jupiter
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
 }
@@ -32,7 +44,7 @@ version = '1.0-SNAPSHOT'
 description = 'cheecken'
 
 application {
-    mainClass = 'cheecken.Cheecken'
+    mainClass = 'cheecken.Launcher'
 }
 
 tasks.named('shadowJar') {
@@ -72,4 +84,21 @@ tasks.withType(Test).configureEach {
 
 tasks.named('run') {
     standardInput = System.in
+}
+
+// Preserve the console interface for debugging and acceptance tests.
+tasks.register('runCli', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'cheecken.Cheecken'
+    standardInput = System.in
+}
+
+// Opt-in because a JavaFX acceptance test needs a graphical desktop.
+tasks.register('guiTest', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    systemProperty 'cheecken.guiTest', 'true'
+    filter {
+        includeTestsMatching 'cheecken.MainTest'
+    }
 }

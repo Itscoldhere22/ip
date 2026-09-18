@@ -1,3 +1,4 @@
 T | 0 | buy her something
 T | 0 | sex
 E | 0 | sex | 2022-10-15 | 2022-10-16
+D | 0 | kiss | 2026-09-18T00:00
