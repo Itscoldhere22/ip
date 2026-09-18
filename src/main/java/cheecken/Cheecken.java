@@ -18,6 +18,7 @@ public class Cheecken {
     private final StringBuilder response = new StringBuilder();
     private boolean isFinished;
     private boolean isLoaded;
+    private boolean hasResponseError;
 
     /**
      * Creates a chatbot using the normal persistence file.
@@ -39,7 +40,7 @@ public class Cheecken {
     public Cheecken(String filePath, Clock clock) {
         this.clock = clock;
         ui = new Ui(this::appendResponse);
-        storage = new Storage(filePath, this::appendResponse);
+        storage = new Storage(filePath, this::appendError);
     }
 
     /**
@@ -50,10 +51,26 @@ public class Cheecken {
     }
 
     /**
+     * Records a storage error and marks the current response for GUI styling.
+     */
+    private void appendError(String message) {
+        hasResponseError = true;
+        appendResponse(message);
+    }
+
+    /**
+     * Returns whether the latest initialization or command response contains an error.
+     */
+    public boolean hasResponseError() {
+        return hasResponseError;
+    }
+
+    /**
      * Loads persisted tasks once and returns any startup warnings.
      */
     public String initialize() {
         response.setLength(0);
+        hasResponseError = false;
         if (!isLoaded) {
             loadTasks();
             isLoaded = true;
@@ -66,6 +83,7 @@ public class Cheecken {
      */
     public String getResponse(String input) {
         response.setLength(0);
+        hasResponseError = false;
         if (isFinished) {
             return "This conversation has ended. Close the window to exit.";
         }
@@ -113,6 +131,7 @@ public class Cheecken {
                 case FIND -> handleFind(input);
             };
         } catch (Exception e) {
+            hasResponseError = true;
             ui.showError(e);
             return false;
         }
@@ -302,7 +321,7 @@ public class Cheecken {
         try {
             storage.save(list.asList());
         } catch (RuntimeException e) {
-            appendResponse("Unable to save tasks: " + e.getMessage());
+            appendError("Unable to save tasks: " + e.getMessage());
         }
     }
 

@@ -48,7 +48,9 @@ class CheeckenResponseTest {
         Cheecken chatbot = new Cheecken(directory.resolve("tasks.txt").toString());
         assertEquals("Task index out of range", chatbot.getResponse("mark 1"));
         assertFalse(chatbot.isFinished());
+        assertTrue(chatbot.hasResponseError());
         assertTrue(chatbot.getResponse("todo recover").contains("[T][ ] recover"));
+        assertFalse(chatbot.hasResponseError());
     }
 
     @Test
@@ -65,5 +67,18 @@ class CheeckenResponseTest {
         Files.writeString(blocked, "This is a file, not a directory.");
         Cheecken chatbot = new Cheecken(blocked.resolve("tasks.txt").toString());
         assertTrue(chatbot.getResponse("todo unsaved task").contains("Unable to save tasks:"));
+        assertTrue(chatbot.hasResponseError());
+        chatbot.getResponse("list");
+        assertFalse(chatbot.hasResponseError());
     }
+
+    @Test
+    void initialize_loadFailure_marksWarningAndResetsForNextResponse() {
+        Cheecken chatbot = new Cheecken(directory.toString());
+        assertTrue(chatbot.initialize().contains("Unable to load tasks:"));
+        assertTrue(chatbot.hasResponseError());
+        chatbot.getResponse("list");
+        assertFalse(chatbot.hasResponseError());
+    }
+
 }

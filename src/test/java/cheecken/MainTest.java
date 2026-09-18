@@ -29,6 +29,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 /**
@@ -74,8 +75,17 @@ class MainTest {
                 assertTrue(text(scene.getRoot()).contains("No time how I set the task..."));
                 enter(input, "wat");
                 assertTrue(text(scene.getRoot()).contains("What do you want?"));
+                scene.getRoot().applyCss();
+                assertEquals(2, scene.getRoot().lookupAll(".error-message").size());
+                for (Node node : scene.getRoot().lookupAll(".error-message")) {
+                    Label error = (Label) node;
+                    assertEquals(Color.web("#b42318"), error.getTextFill());
+                    assertTrue(error.getFont().getStyle().contains("Bold"));
+                    assertTrue(error.getFont().getStyle().contains("Italic"));
+                }
                 enter(input, "find GUI");
                 assertTrue(text(scene.getRoot()).contains("Here are the matching tasks"));
+                assertEquals(2, scene.getRoot().lookupAll(".error-message").size());
                 TitledPane guide = (TitledPane) scene.lookup(".titled-pane");
                 guide.setExpanded(true);
                 assertTrue(text(scene.getRoot()).contains("Dates: d/M/yyyy"));

@@ -41,7 +41,10 @@
      and `event weekday /from Mon 0900 /to MONDAY 1000`. Expect Sep 08 2026
      without a time and Sep 14 2026 at 9:00 AM–10:00 AM respectively.
      Reject `deadline invalid /by next week` without adding a task.
-  6. Enter `wat`, then `find GUI`: an error appears and the next command works.
+  6. Enter `wat`, then `find GUI`: errors (including the invalid deadline above)
+     appear in red (#b42318), bold italic text. The next successful reply uses
+     the normal text style, and user messages retain their normal style.
+     Storage load/save warnings also use the error style.
   7. Expand Command guide: command examples and date format are visible.
      Natural-date help includes today, tomorrow, now, and the strictly-next weekday rule.
   8. Submit a long task and repeated `list` commands; resize to 440 × 560:

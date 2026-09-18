@@ -50,9 +50,10 @@ public class Main extends Application {
         VBox footer = createFooter(stage);
         BorderPane root = new BorderPane(scroll, header, null, footer, null);
         Scene scene = new Scene(root, 620, 720);
-        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());    // beautiful green style
+        // beautiful green style
+        scene.getStylesheets().add(getClass().getResource("/styles/chat.css").toExternalForm());
         stage.setTitle("Cheecken — your task companion");
-        stage.setMinWidth(420);     // window is resizable by default
+        stage.setMinWidth(420); // window is resizable by default
         stage.setMinHeight(480);
         stage.setScene(scene);
         showGreeting();
@@ -113,7 +114,7 @@ public class Main extends Application {
                 + "Try todo read a book, or list to see your saved tasks.", false);
         String warning = chatbot.initialize();
         if (!warning.isBlank()) {
-            addMessage("Cheecken", warning, false);
+            addMessage("Cheecken", warning, false, chatbot.hasResponseError());
         }
     }
 
@@ -147,7 +148,8 @@ public class Main extends Application {
             return;
         }
         addMessage("You", command, true);
-        addMessage("Cheecken", chatbot.getResponse(command), false);
+        String response = chatbot.getResponse(command);
+        addMessage("Cheecken", response, false, chatbot.hasResponseError());
         input.clear();
         if (chatbot.isFinished()) {
             stage.close();
@@ -160,9 +162,19 @@ public class Main extends Application {
      * Adds a wrapping message with a visible speaker label and distinct alignment.
      */
     private void addMessage(String speaker, String text, boolean isUser) {
+        addMessage(speaker, text, isUser, false);
+    }
+
+    /**
+     * Adds a message and styles error text separately from ordinary replies.
+     */
+    private void addMessage(String speaker, String text, boolean isUser, boolean isError) {
         Label name = new Label(speaker);
         name.getStyleClass().add("speaker");
         Label message = new Label(text);
+        if (isError) {
+            message.getStyleClass().add("error-message");
+        }
         message.setWrapText(true);
         message.setMinWidth(0);
         message.setMaxWidth(Double.MAX_VALUE);
