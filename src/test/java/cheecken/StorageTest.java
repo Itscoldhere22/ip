@@ -88,4 +88,57 @@ class StorageTest {
                 "[D][ ] legacy numeric (by: Sep 04 2026 9:00 AM)", "[T][ ] survivor"),
                 tasks.stream().map(Task::toString).toList());
     }
+
+    @Test
+    void save_nestedPath_createsParentsAndOverwritesPreviousContents() throws Exception {
+        Path file = directory.resolve("nested/data/tasks.txt");
+        List<String> errors = new ArrayList<>();
+        Storage storage = new Storage(file.toString(), errors::add);
+        Task todo = new Todo("read book");
+        Task deadline = new Deadline("report", "2026-09-18");
+        Task event = new Event("meeting", "2026-09-18T09:00", "2026-09-18T10:00");
+        todo.mark();
+        deadline.mark();
+        event.mark();
+        List<Task> tasks = List.of(todo, deadline, event);
+        storage.save(tasks);
+        assertEquals(tasks.stream().map(Task::toStorageString).toList(), Files.readAllLines(file));
+        assertEquals(tasks.stream().map(Task::toStorageString).toList(),
+                storage.load().stream().map(Task::toStorageString).toList());
+        storage.save(List.of(new Todo("replacement")));
+        assertEquals("T | 0 | replacement\n", Files.readString(file));
+        storage.save(List.of());
+        assertEquals("", Files.readString(file));
+        assertTrue(storage.load().isEmpty());
+        assertTrue(errors.isEmpty());
+    }
+
+    @Test
+    void save_fileBlocksParent_reportsErrorAndPreservesExistingFile() throws Exception {
+        Path blocked = directory.resolve("blocked");
+        Files.writeString(blocked, "original");
+        List<String> errors = new ArrayList<>();
+        new Storage(blocked.resolve("tasks.txt").toString(), errors::add).save(List.of(new Todo("unsaved")));
+        assertEquals(1, errors.size());
+        assertTrue(errors.get(0).startsWith("Unable to save tasks:"));
+        assertEquals("original", Files.readString(blocked));
+    }
+
+    @Test
+    void load_directoryInsteadOfFile_reportsErrorAndReturnsEmptyList() {
+        List<String> errors = new ArrayList<>();
+        assertTrue(new Storage(directory.toString(), errors::add).load().isEmpty());
+        assertEquals(1, errors.size());
+        assertTrue(errors.get(0).startsWith("Unable to load tasks:"));
+    }
+
+    @Test
+    void load_whitespaceAndUnicode_preservesDescriptionsAndSkipsBrokenRecords() throws Exception {
+        Path file = directory.resolve("tasks.txt");
+        Files.writeString(file, "\nT|0|买书\nT | invalid | skipped\nE|0|short\n"
+                + "D|0|report|2026-09-18\nE|0|bad|invalid|2026-09-18\nT|1|café\n");
+        assertEquals(List.of("[T][ ] 买书", "[D][ ] report (by: Sep 18 2026)", "[T][X] café"),
+                new Storage(file.toString()).load().stream().map(Task::toString).toList());
+    }
+
 }

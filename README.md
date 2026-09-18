@@ -95,10 +95,19 @@ The console interface remains available for debugging:
 
 ```bash
 ./gradlew check
+./gradlew jacocoTestReport
 ./gradlew guiTest
 ```
 
 `check` runs the normal automated tests and Checkstyle for application and test code.
+`jacocoTestReport` runs the JUnit suite and generates coverage at
+`build/reports/jacoco/test/html/index.html` (and an XML report alongside the HTML folder).
+Coverage excludes only the JavaFX window and launcher (`Main` and `Launcher`).
+Tests cover parsing, command validation and recovery, task types and lists, dates,
+response formatting, console sessions, and storage round trips and failures.
+File tests use temporary directories; date-sensitive tests use fixed clocks.
+The report does not include coverage from child JVMs used by process-based tests.
+Defensive assertion failures and redundant guards are not forced through reflection.
 `guiTest` is an additional opt-in JavaFX acceptance test requiring a graphical desktop.
 It uses temporary task data to exercise Enter, Send, blank input, error recovery, command
 help, scrolling, resizing, exit behaviour, and persistence after reopening.

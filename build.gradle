@@ -8,6 +8,7 @@ plugins {
     id 'maven-publish'
     id 'application'
     id 'checkstyle'
+    id 'jacoco'
     id 'com.gradleup.shadow' version '9.5.1'
 }
 
@@ -17,6 +18,22 @@ repositories {
 
 checkstyle {
     toolVersion = '14.1.0'
+}
+
+jacoco {
+    toolVersion = '0.8.14'
+}
+
+// Measure non-GUI application code with the ordinary JUnit suite.
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        html.required = true
+        xml.required = true
+    }
+    classDirectories.setFrom(sourceSets.main.output.asFileTree.matching {
+        exclude 'cheecken/Main.class', 'cheecken/Launcher.class'
+    })
 }
 
 dependencies {
