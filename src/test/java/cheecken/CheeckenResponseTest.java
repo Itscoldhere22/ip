@@ -17,6 +17,9 @@ class CheeckenResponseTest {
     @TempDir
     private Path directory;
 
+    /**
+     * Verifies get response with commands: preserves state and returns plain text.
+     */
     @Test
     void getResponse_commands_preservesStateAndReturnsPlainText() {
         Cheecken chatbot = new Cheecken(directory.resolve("tasks.txt").toString());
@@ -31,6 +34,9 @@ class CheeckenResponseTest {
         assertEquals("Here are the tasks in your list:", chatbot.getResponse("list"));
     }
 
+    /**
+     * Verifies initialize with repeated calls: does not duplicate saved tasks.
+     */
     @Test
     void initialize_repeatedCalls_doesNotDuplicateSavedTasks() {
         String path = directory.resolve("tasks.txt").toString();
@@ -43,6 +49,9 @@ class CheeckenResponseTest {
         assertEquals("Here are the tasks in your list:", separate.getResponse("list"));
     }
 
+    /**
+     * Verifies get response with invalid command: returns error and remains usable.
+     */
     @Test
     void getResponse_invalidCommand_returnsErrorAndRemainsUsable() {
         Cheecken chatbot = new Cheecken(directory.resolve("tasks.txt").toString());
@@ -53,6 +62,9 @@ class CheeckenResponseTest {
         assertFalse(chatbot.hasResponseError());
     }
 
+    /**
+     * Verifies get response with bye: ends session without discarding farewell.
+     */
     @Test
     void getResponse_bye_endsSessionWithoutDiscardingFarewell() {
         Cheecken chatbot = new Cheecken(directory.resolve("tasks.txt").toString());
@@ -61,6 +73,10 @@ class CheeckenResponseTest {
         assertEquals("This conversation has ended. Close the window to exit.", chatbot.getResponse("todo ignored"));
     }
 
+    /**
+     * Verifies get response with save failure: includes warning in reply.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void getResponse_saveFailure_includesWarningInReply() throws Exception {
         Path blocked = directory.resolve("blocked");
@@ -72,6 +88,9 @@ class CheeckenResponseTest {
         assertFalse(chatbot.hasResponseError());
     }
 
+    /**
+     * Verifies initialize with load failure: marks warning and resets for next response.
+     */
     @Test
     void initialize_loadFailure_marksWarningAndResetsForNextResponse() {
         Cheecken chatbot = new Cheecken(directory.toString());

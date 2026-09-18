@@ -6,6 +6,7 @@ package cheecken;
 public class CheeckenDateTimeException extends RuntimeException {
     /**
      * Creates an exception with guidance for the invalid command.
+     * @param command command name used in error guidance
      */
     public CheeckenDateTimeException(String command) {
         super("No time how I set the task...\n" + (command.equals("event")

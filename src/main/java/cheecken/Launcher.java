@@ -8,6 +8,7 @@ import javafx.application.Application;
 public class Launcher {
     /**
      * Launches the graphical chatbot.
+     * @param args command-line arguments (currently unused)
      */
     public static void main(String[] args) {
         Application.launch(Main.class, args);

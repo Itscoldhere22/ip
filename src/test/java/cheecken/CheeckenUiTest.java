@@ -12,10 +12,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Checks command output and persistence through application processes.
+     * @return command inputs and their expected output fragments
  */
 class CheeckenUiTest {
     /**
      * Provides command inputs and expected output fragments.
+     * @return command inputs and their expected output fragments
      */
     static Stream<Arguments> cases() {
         return Stream.of(
@@ -57,6 +59,13 @@ class CheeckenUiTest {
                 "deadline instant /by NOW\nbye\n", "Sep 07 2026 3:30 PM"));
     }
 
+    /**
+     * Verifies command produces expected output.
+     * @param name descriptive test-case name
+     * @param input input supplied by the test case
+     * @param expected expected result for this test case
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @ParameterizedTest(name = "{0}")
     @MethodSource("cases")
     void commandProducesExpectedOutput(String name, String input, String expected) throws Exception {
@@ -64,12 +73,20 @@ class CheeckenUiTest {
         assertTrue(output.contains(expected), () -> "Expected: " + expected + "\nActual:\n" + output);
     }
 
+    /**
+     * Verifies loads persisted task.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @org.junit.jupiter.api.Test
     void loadsPersistedTask() throws Exception {
         String output = run("list\nbye\n", "T | 1 | read book\n");
         assertTrue(output.contains("1.[T][X] read book"));
     }
 
+    /**
+     * Verifies persists task changes.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @org.junit.jupiter.api.Test
     void persistsTaskChanges() throws Exception {
         Path dir = Files.createTempDirectory("cheecken-ui-");
@@ -84,6 +101,10 @@ class CheeckenUiTest {
 
     /**
      * Runs commands in an isolated directory with optional persisted tasks.
+     * @param input input supplied by the test case
+     * @param persisted initial storage contents, or null for no task file
+     * @return captured console output
+     * @throws Exception if test setup, execution, or file access fails
      */
     private static String run(String input, String persisted) throws Exception {
         Path dir = Files.createTempDirectory("cheecken-ui-");
@@ -99,6 +120,9 @@ class CheeckenUiTest {
 
     /**
      * Builds an application process isolated from real user data.
+     * @param input input supplied by the test case
+     * @param dir isolated working directory for the application process
+     * @return configured application process builder
      */
     private static ProcessBuilder process(String input, Path dir) {
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();

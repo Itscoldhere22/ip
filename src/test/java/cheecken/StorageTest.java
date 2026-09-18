@@ -18,6 +18,10 @@ class StorageTest {
     @TempDir
     private Path directory;
 
+    /**
+     * Verifies load with mixed records: preserves valid tasks in order.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void load_mixedRecords_preservesValidTasksInOrder() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -47,6 +51,9 @@ class StorageTest {
         assertTrue(errors.isEmpty());
     }
 
+    /**
+     * Verifies load with missing file: returns empty list without error.
+     */
     @Test
     void load_missingFile_returnsEmptyListWithoutError() {
         List<String> errors = new ArrayList<>();
@@ -56,6 +63,9 @@ class StorageTest {
         assertTrue(errors.isEmpty());
     }
 
+    /**
+     * Verifies save and load with date only and explicit midnight: remain distinct.
+     */
     @Test
     void saveAndLoad_dateOnlyAndExplicitMidnight_remainDistinct() {
         Storage storage = new Storage(directory.resolve("tasks.txt").toString());
@@ -70,6 +80,10 @@ class StorageTest {
         assertEquals("D | 0 | date only | 2026-09-04", storage.load().get(0).toStorageString());
     }
 
+    /**
+     * Verifies load with natural dates: skips records without reinterpreting them.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void load_naturalDates_skipsRecordsWithoutReinterpretingThem() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -89,6 +103,10 @@ class StorageTest {
                 tasks.stream().map(Task::toString).toList());
     }
 
+    /**
+     * Verifies save with nested path: creates parents and overwrites previous contents.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void save_nestedPath_createsParentsAndOverwritesPreviousContents() throws Exception {
         Path file = directory.resolve("nested/data/tasks.txt");
@@ -113,6 +131,10 @@ class StorageTest {
         assertTrue(errors.isEmpty());
     }
 
+    /**
+     * Verifies save with file blocks parent: reports error and preserves existing file.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void save_fileBlocksParent_reportsErrorAndPreservesExistingFile() throws Exception {
         Path blocked = directory.resolve("blocked");
@@ -124,6 +146,9 @@ class StorageTest {
         assertEquals("original", Files.readString(blocked));
     }
 
+    /**
+     * Verifies load with directory instead of file: reports error and returns empty list.
+     */
     @Test
     void load_directoryInsteadOfFile_reportsErrorAndReturnsEmptyList() {
         List<String> errors = new ArrayList<>();
@@ -132,6 +157,10 @@ class StorageTest {
         assertTrue(errors.get(0).startsWith("Unable to load tasks:"));
     }
 
+    /**
+     * Verifies load with whitespace and unicode: preserves descriptions and skips broken records.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void load_whitespaceAndUnicode_preservesDescriptionsAndSkipsBrokenRecords() throws Exception {
         Path file = directory.resolve("tasks.txt");

@@ -11,6 +11,9 @@ public class Event extends Task {
 
     /**
      * Creates an event using one local clock reading for both endpoints.
+     * @param task description of the task
+     * @param startTime event start date or date-time
+     * @param endTime event end date or date-time
      */
     public Event(String task, String startTime, String endTime) {
         this(task, startTime, endTime, Clock.systemDefaultZone());
@@ -18,6 +21,10 @@ public class Event extends Task {
 
     /**
      * Resolves both event endpoints independently against the supplied clock.
+     * @param task description of the task
+     * @param startTime event start date or date-time
+     * @param endTime event end date or date-time
+     * @param clock clock used to resolve relative dates and times
      */
     Event(String task, String startTime, String endTime, Clock clock) {
         super(task);
@@ -28,6 +35,9 @@ public class Event extends Task {
 
     /**
      * Restores already resolved endpoints without reinterpreting saved dates.
+     * @param task description of the task
+     * @param startTime event start date or date-time
+     * @param endTime event end date or date-time
      */
     Event(String task, DateTimeValue startTime, DateTimeValue endTime) {
         super(task);
@@ -37,6 +47,7 @@ public class Event extends Task {
 
     /**
      * Returns the event display representation.
+     * @return formatted task description and completion state
      */
     @Override
     public String toString() {
@@ -45,6 +56,7 @@ public class Event extends Task {
 
     /**
      * Serializes the resolved endpoints, preserving whether each time was supplied.
+     * @return task record formatted for persistence
      */
     @Override
     public String toStorageString() {

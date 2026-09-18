@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
  * Checks task ordering, index boundaries, immutable snapshots, and description search.
  */
 class TaskListTest {
+    /**
+     * Verifies new list with empty: has no tasks or matches.
+     */
     @Test
     void newList_empty_hasNoTasksOrMatches() {
         TaskList tasks = new TaskList();
@@ -23,6 +26,9 @@ class TaskListTest {
         assertThrows(IndexOutOfBoundsException.class, () -> tasks.remove(0));
     }
 
+    /**
+     * Verifies remove with middle task: returns same task and preserves order.
+     */
     @Test
     void remove_middleTask_returnsSameTaskAndPreservesOrder() {
         TaskList tasks = new TaskList();
@@ -43,6 +49,9 @@ class TaskListTest {
         assertEquals(List.of(first, last), tasks.asList());
     }
 
+    /**
+     * Verifies as list with snapshot: is immutable and unaffected by later additions.
+     */
     @Test
     void asList_snapshot_isImmutableAndUnaffectedByLaterAdditions() {
         TaskList tasks = new TaskList();
@@ -55,6 +64,9 @@ class TaskListTest {
         assertEquals(List.of(first), snapshot);
     }
 
+    /**
+     * Verifies find with mixed task types: matches descriptions only in insertion order.
+     */
     @Test
     void find_mixedTaskTypes_matchesDescriptionsOnlyInInsertionOrder() {
         TaskList tasks = new TaskList();

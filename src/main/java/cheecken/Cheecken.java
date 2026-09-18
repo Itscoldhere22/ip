@@ -29,6 +29,7 @@ public class Cheecken {
 
     /**
      * Creates an independent chatbot with a chosen persistence file.
+     * @param filePath path to the task persistence file
      */
     public Cheecken(String filePath) {
         this(filePath, Clock.systemDefaultZone());
@@ -36,6 +37,8 @@ public class Cheecken {
 
     /**
      * Creates a chatbot with a supplied clock for deterministic date resolution.
+     * @param filePath path to the task persistence file
+     * @param clock clock used to resolve relative dates and times
      */
     public Cheecken(String filePath, Clock clock) {
         this.clock = clock;
@@ -45,6 +48,7 @@ public class Cheecken {
 
     /**
      * Adds output to the current response without redirecting global console streams.
+     * @param message message to display or append
      */
     private void appendResponse(String message) {
         response.append(message).append("\n");
@@ -52,6 +56,7 @@ public class Cheecken {
 
     /**
      * Records a storage error and marks the current response for GUI styling.
+     * @param message message to display or append
      */
     private void appendError(String message) {
         hasResponseError = true;
@@ -60,6 +65,7 @@ public class Cheecken {
 
     /**
      * Returns whether the latest initialization or command response contains an error.
+     * @return true if the latest response contains an error; otherwise false
      */
     public boolean hasResponseError() {
         return hasResponseError;
@@ -67,6 +73,7 @@ public class Cheecken {
 
     /**
      * Loads persisted tasks once and returns any startup warnings.
+     * @return startup warnings, or an empty string if there are none
      */
     public String initialize() {
         response.setLength(0);
@@ -80,6 +87,8 @@ public class Cheecken {
 
     /**
      * Executes one command and returns plain text for a chat bubble.
+     * @param input command input to process
+     * @return plain-text reply for the submitted command
      */
     public String getResponse(String input) {
         response.setLength(0);
@@ -99,6 +108,7 @@ public class Cheecken {
 
     /**
      * Returns whether the user has ended the conversation with bye.
+     * @return true if the user has ended the conversation; otherwise false
      */
     public boolean isFinished() {
         return isFinished;
@@ -244,6 +254,9 @@ public class Cheecken {
 
     /**
      * Finds an exact lowercase flag token, excluding words such as /byx and /today.
+     * @param input command input to process
+     * @param flag exact lowercase flag token to locate
+     * @return starting offset of the flag, or -1 if it is absent
      */
     private int findFlag(String input, String flag) {
         Matcher matcher = Pattern.compile("(?<!\\S)" + Pattern.quote(flag) + "(?=\\s|$)").matcher(input);
@@ -263,6 +276,8 @@ public class Cheecken {
 
     /**
      * Displays tasks matching the supplied nonempty search keyword.
+     * @param input command input to process
+     * @return false to continue the command loop
      */
     private boolean handleFind(String input) {
         String keyword = input.substring("find".length()).strip();

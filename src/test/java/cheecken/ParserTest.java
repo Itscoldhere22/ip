@@ -18,6 +18,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ParserTest {
     private final Parser parser = new Parser();
 
+    /**
+     * Verifies normalize with blank input: returns empty string.
+     * @param input input supplied by the test case
+     */
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t\n", "\u2003"})
@@ -26,12 +30,20 @@ class ParserTest {
         assertNull(parser.parseCommand(parser.normalize(input)));
     }
 
+    /**
+     * Verifies normalize with surrounding whitespace: preserves internal spacing.
+     * @param input input supplied by the test case
+     */
     @ParameterizedTest
     @ValueSource(strings = {"todo two  words", "\t todo two  words \n", "\u2003todo two  words\u2003"})
     void normalize_surroundingWhitespace_preservesInternalSpacing(String input) {
         assertEquals("todo two  words", parser.normalize(input));
     }
 
+    /**
+     * Verifies parse command with supported keyword: accepts case and whitespace.
+     * @param command command name used in error guidance
+     */
     @ParameterizedTest
     @EnumSource(CommandType.class)
     void parseCommand_supportedKeyword_acceptsCaseAndWhitespace(CommandType command) {
@@ -44,6 +56,10 @@ class ParserTest {
         assertNull(parser.parseCommand("prefix" + keyword));
     }
 
+    /**
+     * Verifies matches with keyword boundary: accepts exact keyword or space.
+     * @param command command name used in error guidance
+     */
     @ParameterizedTest
     @EnumSource(CommandType.class)
     void matches_keywordBoundary_acceptsExactKeywordOrSpace(CommandType command) {

@@ -6,6 +6,7 @@ package cheecken;
 public class Todo extends Task {
     /**
      * Creates a todo task.
+     * @param task description of the task
      */
     public Todo(String task) {
         super(task);
@@ -13,6 +14,7 @@ public class Todo extends Task {
 
     /**
      * Returns the todo display representation.
+     * @return formatted task description and completion state
      */
     @Override
     public String toString() {
@@ -21,6 +23,7 @@ public class Todo extends Task {
 
     /**
      * Serializes the todo task.
+     * @return task record formatted for persistence
      */
     @Override
     public String toStorageString() {

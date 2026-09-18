@@ -40,6 +40,10 @@ class MainTest {
     @TempDir
     private Path directory;
 
+    /**
+     * Verifies chat window with commands and resize: remains usable and persists tasks.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void chatWindow_commandsAndResize_remainsUsableAndPersistsTasks() throws Exception {
         Platform.startup(() -> Platform.setImplicitExit(false));
@@ -143,6 +147,8 @@ class MainTest {
 
     /**
      * Submits through the same action handler used by the Enter key.
+     * @param input input supplied by the test case
+     * @param command command name used in error guidance
      */
     private static void enter(TextField input, String command) {
         input.setText(command);
@@ -151,6 +157,8 @@ class MainTest {
 
     /**
      * Collects visible label content for assertions without depending on screen coordinates.
+     * @param node root node whose label text is collected
+     * @return combined text of labels beneath the supplied node
      */
     private static String text(Node node) {
         StringBuilder result = new StringBuilder();
@@ -165,6 +173,9 @@ class MainTest {
 
     /**
      * Saves the rendered scene for a visual review of wrapping and layout.
+     * @param scene scene to capture
+     * @param path destination for the saved image
+     * @throws Exception if test setup, execution, or file access fails
      */
     private static void saveSnapshot(Scene scene, Path path) throws Exception {
         WritableImage snapshot = scene.snapshot(null);

@@ -35,6 +35,7 @@ public class Main extends Application {
 
     /**
      * Supplies an isolated chatbot for GUI acceptance tests.
+     * @param chatbot chatbot session used by the window
      */
     Main(Cheecken chatbot) {
         this.chatbot = chatbot;
@@ -42,6 +43,7 @@ public class Main extends Application {
 
     /**
      * Creates the conversation, command guide, and input controls.
+     * @param stage application window
      */
     @Override
     public void start(Stage stage) {
@@ -63,6 +65,7 @@ public class Main extends Application {
 
     /**
      * Creates the application heading and expandable command guide.
+     * @return header containing the title, subtitle, and command guide
      */
     private VBox createHeader() {
         Label title = new Label("Cheecken");
@@ -76,6 +79,7 @@ public class Main extends Application {
 
     /**
      * Creates a conversation viewport that follows newly added messages.
+     * @return scrollable conversation viewport
      */
     private ScrollPane createConversationPane() {
         conversation.setPadding(new Insets(20));
@@ -88,6 +92,8 @@ public class Main extends Application {
 
     /**
      * Creates the input controls and connects keyboard and button submission.
+     * @param stage application window
+     * @return footer containing command input and status controls
      */
     private VBox createFooter(Stage stage) {
         input.setId("commandInput");
@@ -120,6 +126,7 @@ public class Main extends Application {
 
     /**
      * Displays command examples without requiring a separate help window.
+     * @return collapsible command guide
      */
     private TitledPane createGuide() {
         Label examples = new Label("todo read a book\n"
@@ -141,6 +148,7 @@ public class Main extends Application {
 
     /**
      * Sends a nonblank command once and closes the window after bye.
+     * @param stage application window
      */
     private void handleUserInput(Stage stage) {
         String command = input.getText().strip();
@@ -160,6 +168,9 @@ public class Main extends Application {
 
     /**
      * Adds a wrapping message with a visible speaker label and distinct alignment.
+     * @param speaker name displayed above the message
+     * @param text message text to display
+     * @param isUser true for a user message; false for a chatbot reply
      */
     private void addMessage(String speaker, String text, boolean isUser) {
         addMessage(speaker, text, isUser, false);
@@ -167,6 +178,10 @@ public class Main extends Application {
 
     /**
      * Adds a message and styles error text separately from ordinary replies.
+     * @param speaker name displayed above the message
+     * @param text message text to display
+     * @param isUser true for a user message; false for a chatbot reply
+     * @param isError true to apply error styling to the message
      */
     private void addMessage(String speaker, String text, boolean isUser, boolean isError) {
         Label name = new Label(speaker);

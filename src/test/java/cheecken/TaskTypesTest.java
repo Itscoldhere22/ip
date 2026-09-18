@@ -10,8 +10,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Checks display and persistence for each task type throughout completion changes.
+     * @return task instances and their expected display and storage representations
  */
 class TaskTypesTest {
+    /**
+     * Provides task types and their expected display and storage representations.
+     * @return task instances and their expected display and storage representations
+     */
     static Stream<Arguments> tasks() {
         return Stream.of(
                 Arguments.of(new Todo("read"), "[T][ ] read", "T | 0 | read"),
@@ -24,6 +29,12 @@ class TaskTypesTest {
                         "E | 0 | meeting | 2026-09-18 | 2026-09-19T00:00"));
     }
 
+    /**
+     * Verifies completion changes with all task types: preserve description and dates.
+     * @param task task to process
+     * @param display expected unmarked display text
+     * @param storage expected unmarked storage text
+     */
     @ParameterizedTest
     @MethodSource("tasks")
     void completionChanges_allTaskTypes_preserveDescriptionAndDates(Task task, String display, String storage) {

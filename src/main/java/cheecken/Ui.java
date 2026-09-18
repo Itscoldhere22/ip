@@ -20,6 +20,7 @@ public class Ui {
 
     /**
      * Sends formatted messages to the supplied output destination.
+     * @param output destination for formatted output messages
      */
     public Ui(Consumer<String> output) {
         this.output = output;
@@ -48,6 +49,7 @@ public class Ui {
 
     /**
      * Prints the current task list.
+     * @param tasks tasks in display or storage order
      */
     public void showList(List<Task> tasks) {
         output.accept(SEPARATOR + "\nHere are the tasks in your list:");
@@ -59,6 +61,7 @@ public class Ui {
 
     /**
      * Displays tasks matching a search keyword, or a no-match message.
+     * @param matches matching tasks in display order
      */
     public void showFind(List<Task> matches) {
         output.accept(SEPARATOR);
@@ -75,6 +78,8 @@ public class Ui {
 
     /**
      * Prints a task-created confirmation.
+     * @param task task to process
+     * @param count number of tasks after the addition
      */
     public void showAdded(Task task, int count) {
         output.accept(SEPARATOR + "\nGot it. I've added this task:\n  " + task
@@ -83,6 +88,8 @@ public class Ui {
 
     /**
      * Prints a task status or deletion confirmation.
+     * @param message message to display or append
+     * @param task task to process
      */
     public void showTaskMessage(String message, Task task) {
         output.accept(SEPARATOR + "\n" + message + "\n  " + task + "\n" + SEPARATOR);
@@ -90,6 +97,7 @@ public class Ui {
 
     /**
      * Prints a formatted error message.
+     * @param exception exception whose message is displayed
      */
     public void showError(Exception exception) {
         output.accept(SEPARATOR);

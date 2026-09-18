@@ -24,6 +24,9 @@ class CheeckenConsoleTest {
     @TempDir
     private Path directory;
 
+    /**
+     * Verifies run with end of input: exits without inventing farewell.
+     */
     @Test
     void run_endOfInput_exitsWithoutInventingFarewell() {
         String output = run("", new Cheecken(directory.resolve("tasks.txt").toString()));
@@ -31,6 +34,10 @@ class CheeckenConsoleTest {
         assertFalse(output.contains("Bye."));
     }
 
+    /**
+     * Verifies run with error then valid command: recovers and stops at bye.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void run_errorThenValidCommand_recoversAndStopsAtBye() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -42,6 +49,10 @@ class CheeckenConsoleTest {
         assertEquals("T | 0 | keep\n", Files.readString(file));
     }
 
+    /**
+     * Verifies run with existing tasks: loads before first command.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void run_existingTasks_loadsBeforeFirstCommand() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -51,6 +62,9 @@ class CheeckenConsoleTest {
         assertEquals(1, output.split("1\\.\\[T]\\[X] saved", -1).length - 1);
     }
 
+    /**
+     * Verifies default ui_prints to console.
+     */
     @Test
     void defaultUi_printsToConsole() {
         PrintStream original = System.out;
@@ -66,6 +80,9 @@ class CheeckenConsoleTest {
 
     /**
      * Runs one console session and always restores the process-wide streams.
+     * @param input input supplied by the test case
+     * @param chatbot chatbot session used by the window
+     * @return captured console output
      */
     private String run(String input, Cheecken chatbot) {
         InputStream originalInput = System.in;

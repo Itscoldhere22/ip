@@ -24,6 +24,10 @@ class CheeckenNaturalDateTest {
     @TempDir
     private Path directory;
 
+    /**
+     * Verifies get response with natural dates: resolve and survive next day reload.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void getResponse_naturalDates_resolveAndSurviveNextDayReload() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -45,6 +49,10 @@ class CheeckenNaturalDateTest {
         assertEquals(chatbot.getResponse("list"), reopened.getResponse("list"));
     }
 
+    /**
+     * Verifies get response with invalid date or flag: reports concise error without mutation.
+     * @param input input supplied by the test case
+     */
     @ParameterizedTest
     @ValueSource(strings = {"deadline bad /by yesterday", "deadline bad /by now 0900",
         "deadline bad /BY tomorrow", "deadline bad /byx tomorrow", "deadline bad /by tomorrow 2400",
@@ -60,6 +68,9 @@ class CheeckenNaturalDateTest {
         assertEquals("Here are the tasks in your list:\n1.[T][ ] keep", chatbot.getResponse("list"));
     }
 
+    /**
+     * Verifies get response with event endpoints: resolve independently without ordering restriction.
+     */
     @Test
     void getResponse_eventEndpoints_resolveIndependentlyWithoutOrderingRestriction() {
         Cheecken chatbot = new Cheecken(directory.resolve("tasks.txt").toString(), MONDAY);
@@ -69,6 +80,9 @@ class CheeckenNaturalDateTest {
                 .contains("from: Sep 07 2026 to: Sep 07 2026 12:00 AM"));
     }
 
+    /**
+     * Verifies get response with clock crosses midnight: uses one instant per command.
+     */
     @Test
     void getResponse_clockCrossesMidnight_usesOneInstantPerCommand() {
         Clock clock = new AdvancingClock();
@@ -84,16 +98,29 @@ class CheeckenNaturalDateTest {
     private static class AdvancingClock extends Clock {
         private int reads;
 
+        /**
+         * Returns the timezone used by the advancing test clock.
+         * @return UTC, the timezone used by this test clock
+         */
         @Override
         public ZoneId getZone() {
             return ZoneOffset.UTC;
         }
 
+        /**
+         * Creates a fixed test clock in the requested timezone.
+         * @param zone timezone for the returned clock
+         * @return fixed clock using the supplied timezone
+         */
         @Override
         public Clock withZone(ZoneId zone) {
             return Clock.fixed(Instant.parse("2026-12-31T23:59:59Z"), zone);
         }
 
+        /**
+         * Returns the next instant from the advancing test clock.
+         * @return next instant, advancing one second on each call
+         */
         @Override
         public Instant instant() {
             return Instant.parse("2026-12-31T23:59:59Z").plusSeconds(reads++);

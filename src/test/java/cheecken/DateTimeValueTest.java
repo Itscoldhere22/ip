@@ -22,16 +22,27 @@ import org.junit.jupiter.params.provider.ValueSource;
 class DateTimeValueTest {
     private static final Clock FIXED = Clock.fixed(Instant.parse("2026-09-04T10:30:00Z"), ZoneOffset.UTC);
 
+    /**
+     * Verifies today resolves to date only.
+     */
     @Test
     void todayResolvesToDateOnly() {
         assertEquals("Sep 04 2026", DateTimeValue.parse("today", "deadline", FIXED).display());
     }
 
+    /**
+     * Verifies now resolves to date and time.
+     */
     @Test
     void nowResolvesToDateAndTime() {
         assertEquals("Sep 04 2026 10:30 AM", DateTimeValue.parse("now", "deadline", FIXED).display());
     }
 
+    /**
+     * Verifies parse with natural date: resolves strictly next weekday.
+     * @param input input supplied by the test case
+     * @param expected expected result for this test case
+     */
     @ParameterizedTest
     @CsvSource({
         "today, 2026-09-04", "tomorrow, 2026-09-05",
@@ -49,6 +60,11 @@ class DateTimeValueTest {
         assertFalse(value.hasExplicitTime());
     }
 
+    /**
+     * Verifies parse with natural date with time: preserves explicit time.
+     * @param input input supplied by the test case
+     * @param expected expected result for this test case
+     */
     @ParameterizedTest
     @CsvSource({
         "today 0900, 2026-09-04T09:00", "tomorrow 1800, 2026-09-05T18:00",
@@ -60,11 +76,18 @@ class DateTimeValueTest {
         assertTrue(value.hasExplicitTime());
     }
 
+    /**
+     * Verifies parse with whitespace between date and time: is accepted.
+     */
     @Test
     void parse_whitespaceBetweenDateAndTime_isAccepted() {
         assertEquals("2026-09-05T09:00", DateTimeValue.parse(" tomorrow \t 0900 ", "event", FIXED).storage());
     }
 
+    /**
+     * Verifies parse with unsupported expression: throws date time exception.
+     * @param input input supplied by the test case
+     */
     @ParameterizedTest
     @ValueSource(strings = {"yesterday", "next Monday", "next week", "in 3 days", "Tues", "Thurs", "Mon.",
         "today 2400", "today 2360", "today 900", "today 09000", "today 09:00", "tomorrow 6pm",
@@ -73,6 +96,11 @@ class DateTimeValueTest {
         assertThrows(CheeckenDateTimeException.class, () -> DateTimeValue.parse(input, "deadline", FIXED));
     }
 
+    /**
+     * Verifies parse with absolute format: preserves existing support.
+     * @param input input supplied by the test case
+     * @param expected expected result for this test case
+     */
     @ParameterizedTest
     @CsvSource({
         "4/9/2026, 2026-09-04", "4/9/2026 0900, 2026-09-04T09:00",
@@ -82,6 +110,13 @@ class DateTimeValueTest {
         assertEquals(expected, DateTimeValue.parse(input, "event", FIXED).storage());
     }
 
+    /**
+     * Verifies parse with calendar boundary: uses clock zone.
+     * @param instant reference instant in ISO format
+     * @param zone timezone for the returned clock
+     * @param input input supplied by the test case
+     * @param expected expected result for this test case
+     */
     @ParameterizedTest
     @CsvSource({
         "2026-12-31T23:59:59Z, UTC, tomorrow, 2027-01-01",
@@ -96,6 +131,9 @@ class DateTimeValueTest {
         assertEquals(expected, DateTimeValue.parse(input, "deadline", clock).storage());
     }
 
+    /**
+     * Verifies parse with now: preserves local instant and precision.
+     */
     @Test
     void parse_now_preservesLocalInstantAndPrecision() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-04T23:59:59.123Z"), ZoneId.of("Asia/Singapore"));

@@ -20,6 +20,11 @@ class CommandValidationTest {
     @TempDir
     private Path directory;
 
+    /**
+     * Verifies get response with invalid command: preserves memory and storage.
+     * @param command command name used in error guidance
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "unknown", "todoSuffix", "todo", "todo   ", "find", "find   ",
@@ -42,6 +47,10 @@ class CommandValidationTest {
         assertFalse(chatbot.hasResponseError());
     }
 
+    /**
+     * Verifies get response with mixed case and whitespace: executes commands and persists changes.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void getResponse_mixedCaseAndWhitespace_executesCommandsAndPersistsChanges() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -59,6 +68,10 @@ class CommandValidationTest {
         assertEquals("", Files.readString(file));
     }
 
+    /**
+     * Verifies get response with after bye: does not execute or change storage.
+     * @throws Exception if test setup, execution, or file access fails
+     */
     @Test
     void getResponse_afterBye_doesNotExecuteOrChangeStorage() throws Exception {
         Path file = directory.resolve("tasks.txt");
@@ -71,6 +84,9 @@ class CommandValidationTest {
         assertEquals("T | 0 | keep\n", Files.readString(file));
     }
 
+    /**
+     * Verifies initialize with after load failure: clears warning without retrying.
+     */
     @Test
     void initialize_afterLoadFailure_clearsWarningWithoutRetrying() {
         Cheecken chatbot = new Cheecken(directory.toString());

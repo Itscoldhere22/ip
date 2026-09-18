@@ -23,6 +23,9 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
 
     /**
      * Parses supported keywords and date formats using the system clock.
+     * @param text date or date-time text to parse
+     * @param command command name used in error guidance
+     * @return resolved date-time value, preserving whether a time was supplied
      */
     public static DateTimeValue parse(String text, String command) {
         return parse(text, command, Clock.systemDefaultZone());
@@ -30,6 +33,10 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
 
     /**
      * Parses supported keywords and date formats using a supplied clock.
+     * @param text date or date-time text to parse
+     * @param command command name used in error guidance
+     * @param clock clock used to resolve relative dates and times
+     * @return resolved date-time value, preserving whether a time was supplied
      */
     public static DateTimeValue parse(String text, String command, Clock clock) {
         String value = text.trim();
@@ -53,6 +60,9 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
 
     /**
      * Resolves supported English date words; weekdays always advance at least one day.
+     * @param word natural-date keyword to resolve
+     * @param today local date used as the reference
+     * @return resolved date, or null if the word is not supported
      */
     private static LocalDate resolveNaturalDate(String word, LocalDate today) {
         if (word.equalsIgnoreCase("today")) {
@@ -72,6 +82,9 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
 
     /**
      * Parses existing absolute formats without interpreting relative words in saved records.
+     * @param text date or date-time text to parse
+     * @param command command name used in error guidance
+     * @return parsed absolute date-time value, preserving whether a time was supplied
      */
     static DateTimeValue parseAbsolute(String text, String command) {
         String value = text.trim();
@@ -101,6 +114,7 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
 
     /**
      * Formats this value for user-facing output.
+     * @return date or date-time formatted for display
      */
     public String display() {
         return value.format(hasExplicitTime ? TIME : DATE);
@@ -108,6 +122,7 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
 
     /**
      * Formats this value for persistence.
+     * @return absolute date or date-time formatted for persistence
      */
     public String storage() {
         return hasExplicitTime ? value.toString() : value.toLocalDate().toString();

@@ -11,6 +11,7 @@ public class Task {
 
     /**
      * Creates an unmarked task with the supplied description.
+     * @param task description of the task
      */
     public Task(String task) {
         this.task = task;
@@ -33,6 +34,8 @@ public class Task {
 
     /**
      * Returns whether this task description contains the supplied keyword.
+     * @param keyword keyword to match against task descriptions
+     * @return true if the description contains the keyword, ignoring case
      */
     public boolean containsKeyword(String keyword) {
         return task.toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT));
@@ -40,6 +43,7 @@ public class Task {
 
     /**
      * Serializes this task for persistence.
+     * @return task record formatted for persistence
      */
     public String toStorageString() {
         return "T | " + (isMarked ? "1" : "0") + " | " + task;
@@ -47,6 +51,7 @@ public class Task {
 
     /**
      * Returns the display representation of this task.
+     * @return formatted task description and completion state
      */
     @Override
     public String toString() {

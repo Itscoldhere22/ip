@@ -9,8 +9,15 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Checks user-facing exception guidance, including legacy public constructors.
+     * @param command command name used in error guidance
+     * @param example expected command example in the guidance
  */
 class ExceptionTest {
+    /**
+     * Verifies empty exception with command type: provides relevant example.
+     * @param command command name used in error guidance
+     * @param example expected command example in the guidance
+     */
     @ParameterizedTest
     @CsvSource({"todo, todo buy her flowers", "event, event love me /from",
         "deadline, deadline buy her flowers /by", "unknown, todo buy her flowers"})
@@ -20,6 +27,9 @@ class ExceptionTest {
         assertTrue(message.contains(example));
     }
 
+    /**
+     * Verifies legacy exceptions with missing arguments: provide guidance.
+     */
     @Test
     void legacyExceptions_missingArguments_provideGuidance() {
         assertEquals("What are you trying to delete?\n(e.g. delete 3)",
@@ -30,6 +40,11 @@ class ExceptionTest {
         assertTrue(new CheeckenUnknownException().getMessage().startsWith("What do you want?"));
     }
 
+    /**
+     * Verifies date time exception with command type: provides date syntax.
+     * @param command command name used in error guidance
+     * @param example expected command example in the guidance
+     */
     @ParameterizedTest
     @CsvSource({"event, Try: event meeting /from", "deadline, Try: deadline report /by"})
     void dateTimeException_commandType_providesDateSyntax(String command, String example) {

@@ -16,6 +16,7 @@ public class Storage {
 
     /**
      * Creates storage backed by the supplied relative or absolute path.
+     * @param filePath path to the task persistence file
      */
     public Storage(String filePath) {
         this(filePath, System.out::println);
@@ -23,6 +24,8 @@ public class Storage {
 
     /**
      * Creates storage with an error destination shared by the console or GUI.
+     * @param filePath path to the task persistence file
+     * @param reportError destination for storage error messages
      */
     public Storage(String filePath, Consumer<String> reportError) {
         this.file = Path.of(filePath);
@@ -31,6 +34,7 @@ public class Storage {
 
     /**
      * Saves all tasks, reporting I/O failures to the user.
+     * @param tasks tasks in display or storage order
      */
     public void save(List<Task> tasks) {
         try {
@@ -43,6 +47,7 @@ public class Storage {
 
     /**
      * Loads valid task records and skips malformed records.
+     * @return valid stored tasks, or an empty list if no tasks can be loaded
      */
     public List<Task> load() {
         List<Task> tasks = new ArrayList<>();
@@ -64,6 +69,8 @@ public class Storage {
 
     /**
      * Restores one task and its completion state, or returns null for a malformed record.
+     * @param line stored task record to parse
+     * @return restored task, or null if the record is malformed
      */
     private Task parseRecord(String line) {
         try {
