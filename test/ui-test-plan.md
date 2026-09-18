@@ -4,7 +4,15 @@
 
 - Run commands from the repository root.
 - Use Java 25.
-- Compare stdout exactly, including whitespace and final newlines.
+- In expected-output blocks, `\033` represents the actual ANSI escape
+  character (U+001B), not four literal characters. Decode only this notation
+  before comparing; preserve the ASCII-art backslashes literally.
+- Ignore trailing ASCII spaces on the first six stdout lines (the decorative
+  welcome banner), on both actual and expected output. Leading spaces and
+  spaces within those lines remain significant.
+- Compare all remaining stdout exactly, including ANSI formatting sequences,
+  whitespace, blank lines, and the final newline. Require empty stderr and
+  exit code 0 unless a case explicitly specifies otherwise.
 - Compile the Java sources into a temporary directory before running the
   program; do not add build artifacts to the repository.
 
@@ -14,7 +22,7 @@
 
 - **Aim:** Verify that the application displays its welcome banner, accepts the
   `bye` command, prints the farewell message, and exits.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'bye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'bye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -24,9 +32,9 @@
 - **Expected output:**
 
   ```text
-   _____ _                    _             
-  /  __ \ |                  | |            
-  | /  \/ |__   ___  ___  ___| | _____ _ __ 
+   _____ _                    _
+  /  __ \ |                  | |
+  | /  \/ |__   ___  ___  ___| | _____ _ __
   | |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
   | \__/\ | | |  __/  __/ (__|   <  __/ | | |
    \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
@@ -44,7 +52,7 @@
 - **Aim:** Verify task creation, completion toggling, listing, and exit across
   the requested `todo`, `event`, `deadline`, `mark`, `unmark`, `list`, and
   `bye` commands.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Buy milk\nevent Team meeting /from Monday 10am /to Monday 11am\ndeadline Submit report /by Friday\nmark 1\nunmark 1\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'todo Buy milk\nevent Team meeting /from Monday 10am /to Monday 11am\ndeadline Submit report /by Friday\nmark 1\nunmark 1\nlist\nbye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -60,10 +68,10 @@
 - **Expected output:**
 
   ```text
-   _____ _                    _             
-  /  __ \ |                  | |             
-  | /  \/ |__   ___  ___  ___| | _____ _ __  
-  | |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \ 
+   _____ _                    _
+  /  __ \ |                  | |
+  | /  \/ |__   ___  ___  ___| | _____ _ __
+  | |   | '_ \ / _ \/ _ \/ __| |/ / _ \ '_ \
   | \__/\ | | |  __/  __/ (__|   <  __/ | | |
    \____/_| |_|\___|\___|\___|_|\_\___|_| |_|
   ____________________________________________________________
@@ -111,7 +119,7 @@
 
 - **Aim:** Confirm that an invalid `mark` is rejected and does not alter a
   previously added task.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Read book\nmark 2\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'todo Read book\nmark 2\nlist\nbye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -129,7 +137,7 @@
 
 - **Aim:** Confirm that an `event` missing `/to` is rejected and leaves the
   task list unchanged.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Keep baseline\nevent Broken /from Monday\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'todo Keep baseline\nevent Broken /from Monday\nlist\nbye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -147,7 +155,7 @@
 
 - **Aim:** Confirm that a `deadline` missing `/by` is rejected and does not
   mutate the task list.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Keep baseline\ndeadline Broken\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'todo Keep baseline\ndeadline Broken\nlist\nbye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -166,7 +174,7 @@
 
 - **Aim:** Confirm that an unknown command is rejected and does not undo a
   successful `mark` operation.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Keep state\nmark 1\nwat\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'todo Keep state\nmark 1\nwat\nlist\nbye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -186,7 +194,7 @@
 
 - **Aim:** Verify that a word beginning with a valid command name, such as
   `marker`, is not interpreted as the `mark` command.
-- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/*.java && printf 'todo Keep boundary\nmarker 1\nlist\nbye\n' | java -cp "$BUILD_DIR" Cheecken`
+- **Command:** `BUILD_DIR=$(mktemp -d) && javac -d "$BUILD_DIR" src/main/java/cheecken/*.java && printf 'todo Keep boundary\nmarker 1\nlist\nbye\n' | java -cp "$BUILD_DIR" cheecken.Cheecken`
 - **Input:**
 
   ```text
@@ -225,7 +233,7 @@
   E | 0 | project meeting | Aug 6th 2-4pm
   ```
 
-- **Command:** Compile and run `Cheecken`, send `list`, then `bye`.
+- **Command:** Compile and run `cheecken.Cheecken`, send `list`, then `bye`.
 - **Input:** `list`, `bye`.
 - **Expected output:** The list contains three loaded tasks; `read book` is
   marked done, and the deadline and event are unmarked. No duplicate tasks are

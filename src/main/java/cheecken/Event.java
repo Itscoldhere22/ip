@@ -1,18 +1,23 @@
-package Cheecken;
+package cheecken;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
-/** Represents a task with a start and end date or date-time. */
+/**
+ * Represents a task with a start and end date or date-time.
+ */
 public class Event extends Task {
     protected LocalDateTime startTime;
     protected LocalDateTime endTime;
     private final boolean hasStartTime;
     private final boolean hasEndTime;
 
+    /**
+     * Creates an event after parsing its start and end values.
+     */
     public Event(String task, String startTime, String endTime) {
         super(task);
         this.hasStartTime = hasTime(startTime);
@@ -21,14 +26,20 @@ public class Event extends Task {
         this.endTime = parseDateTime(endTime);
     }
 
+    /**
+     * Returns whether the input includes an explicit time component.
+     */
     private static boolean hasTime(String value) {
         return value.trim().contains(" ") || value.contains("T");
     }
 
+    /**
+     * Parses supported date formats or reports invalid input.
+     */
     private static LocalDateTime parseDateTime(String value) {
         for (DateTimeFormatter formatter : new DateTimeFormatter[] {
-                DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-                DateTimeFormatter.ofPattern("d/M/yyyy HHmm") }) {
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+            DateTimeFormatter.ofPattern("d/M/yyyy HHmm") }) {
             try {
                 return LocalDateTime.parse(value, formatter);
             } catch (DateTimeParseException ignored) {
@@ -48,15 +59,23 @@ public class Event extends Task {
         throw new CheeckenDateTimeException("event");
     }
 
+    /**
+     * Returns the event display representation.
+     */
+    @Override
     public String toString() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy h:mm a", Locale.ENGLISH);
         String start = hasStartTime ? startTime.format(formatter)
                 : startTime.format(DateTimeFormatter.ofPattern("MMM dd yyyy", Locale.ENGLISH));
         String end = hasEndTime ? endTime.format(formatter)
                 : endTime.format(DateTimeFormatter.ofPattern("MMM dd yyyy", Locale.ENGLISH));
-        return String.format("[E]" + super.toString() +
-                " (from: " + start + " to: " + end + ")");
+        return String.format("[E]" + super.toString()
+                + " (from: " + start + " to: " + end + ")");
     }
+
+    /**
+     * Serializes the event task.
+     */
     @Override
     public String toStorageString() {
         return "E | " + (isMarked ? "1" : "0") + " | " + task + " | "
@@ -64,6 +83,3 @@ public class Event extends Task {
                 + (hasEndTime ? endTime : endTime.toLocalDate());
     }
 }
-    /** Creates an event after parsing its start and end values. */
-    /** Returns the event display representation. */
-    /** Serializes the event task. */

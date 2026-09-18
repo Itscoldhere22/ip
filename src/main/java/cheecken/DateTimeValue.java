@@ -1,21 +1,28 @@
-package Cheecken;
+package cheecken;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
-/** Shared parsed date/time value for deadlines and events. */
-/** Parsed date-time value that preserves whether a time was explicitly entered. */
+/**
+ * Parsed date-time value that preserves whether a time was explicitly entered.
+ */
 public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MMM dd yyyy", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("MMM dd yyyy h:mm a", Locale.ENGLISH);
+    /**
+     * Parses supported keywords and date formats using the system clock.
+     */
     public static DateTimeValue parse(String text, String command) {
         return parse(text, command, Clock.systemDefaultZone());
     }
 
+    /**
+     * Parses supported keywords and date formats using a supplied clock.
+     */
     public static DateTimeValue parse(String text, String command, Clock clock) {
         String value = text.trim();
         if (value.equalsIgnoreCase("today")) {
@@ -35,7 +42,8 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
             // Try the next supported format.
         }
         try {
-            return new DateTimeValue(LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay(), false);
+            return new DateTimeValue(
+                    LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/yyyy")).atStartOfDay(), false);
         } catch (DateTimeParseException ignored) {
             // Try the next supported format.
         }
@@ -46,10 +54,18 @@ public record DateTimeValue(LocalDateTime value, boolean hasExplicitTime) {
         }
         throw new CheeckenDateTimeException(command);
     }
-    public String display() { return value.format(hasExplicitTime ? TIME : DATE); }
-    public String storage() { return hasExplicitTime ? value.toString() : value.toLocalDate().toString(); }
+
+    /**
+     * Formats this value for user-facing output.
+     */
+    public String display() {
+        return value.format(hasExplicitTime ? TIME : DATE);
+    }
+
+    /**
+     * Formats this value for persistence.
+     */
+    public String storage() {
+        return hasExplicitTime ? value.toString() : value.toLocalDate().toString();
+    }
 }
-    /** Parses supported keywords and date formats using the system clock. */
-    /** Parses supported keywords and date formats using a supplied clock. */
-    /** Formats this value for user-facing output. */
-    /** Formats this value for persistence. */

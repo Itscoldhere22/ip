@@ -1,12 +1,16 @@
-package Cheecken;
+package cheecken;
 
 import java.util.List;
 
-/** Handles all user-facing console output. */
-/** Handles all user-facing console output. */
+/**
+ * Handles all user-facing console output.
+ */
 public class Ui {
     private static final String SEPARATOR = "____________________________________________________________";
 
+    /**
+     * Prints the welcome banner.
+     */
     public void showWelcome() {
         System.out.println(" _____ _                    _              \n"
                 + "/  __ \\ |                  | |             \n"
@@ -18,10 +22,16 @@ public class Ui {
                 + "What can I do for you?\n" + SEPARATOR);
     }
 
+    /**
+     * Prints the farewell message.
+     */
     public void showBye() {
         System.out.println(SEPARATOR + "\nBye. Hope to see you again soon!\n" + SEPARATOR);
     }
 
+    /**
+     * Prints the current task list.
+     */
     public void showList(List<Task> tasks) {
         System.out.println(SEPARATOR + "\nHere are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
@@ -30,7 +40,9 @@ public class Ui {
         System.out.println(SEPARATOR);
     }
 
-    /** Displays tasks matching a search keyword, or a no-match message. */
+    /**
+     * Displays tasks matching a search keyword, or a no-match message.
+     */
     public void showFind(List<Task> matches) {
         System.out.println(SEPARATOR);
         if (matches.isEmpty()) {
@@ -44,23 +56,26 @@ public class Ui {
         System.out.println(SEPARATOR);
     }
 
+    /**
+     * Prints a task-created confirmation.
+     */
     public void showAdded(Task task, int count) {
         System.out.println(SEPARATOR + "\nGot it. I've added this task:\n  " + task
                 + "\nNow you have " + count + " tasks in the list.\n" + SEPARATOR);
     }
 
+    /**
+     * Prints a task status or deletion confirmation.
+     */
     public void showTaskMessage(String message, Task task) {
         System.out.println(SEPARATOR + "\n" + message + "\n  " + task + "\n" + SEPARATOR);
     }
 
+    /**
+     * Prints a formatted error message.
+     */
     public void showError(Exception exception) {
         System.out.println(SEPARATOR);
         System.out.println(exception.getMessage());
     }
 }
-    /** Prints the welcome banner. */
-    /** Prints the farewell message. */
-    /** Prints the current task list. */
-    /** Prints a task-created confirmation. */
-    /** Prints a task status or deletion confirmation. */
-    /** Prints a formatted error message. */

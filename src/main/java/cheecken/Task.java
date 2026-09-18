@@ -1,40 +1,55 @@
-package Cheecken;
+package cheecken;
 
 import java.util.Locale;
 
+/**
+ * Represents a task description and its completion state.
+ */
 public class Task {
     protected final String task;
     protected boolean isMarked;
 
+    /**
+     * Creates an unmarked task with the supplied description.
+     */
     public Task(String task) {
         this.task = task;
         this.isMarked = false;
     }
 
+    /**
+     * Marks this task as completed.
+     */
     public void mark() {
         this.isMarked = true;
     }
 
+    /**
+     * Marks this task as not completed.
+     */
     public void unmark() {
         this.isMarked = false;
     }
 
-    /** Returns whether this task description contains the supplied keyword. */
+    /**
+     * Returns whether this task description contains the supplied keyword.
+     */
     public boolean containsKeyword(String keyword) {
         return task.toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * Serializes this task for persistence.
+     */
     public String toStorageString() {
         return "T | " + (isMarked ? "1" : "0") + " | " + task;
     }
 
+    /**
+     * Returns the display representation of this task.
+     */
     @Override
-    /** Returns the display representation of this task. */
     public String toString() {
         return String.format("[" + (this.isMarked ? "X" : " ") + "] " + this.task);
     }
 }
-    /** Creates an unmarked task with the supplied description. */
-    /** Marks this task as completed. */
-    /** Marks this task as not completed. */
-    /** Serializes this task for persistence. */

@@ -1,4 +1,4 @@
-package Cheecken;
+package cheecken;
 
 /**
  * Commands understood by the Cheecken command-line interface.

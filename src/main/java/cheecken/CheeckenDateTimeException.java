@@ -1,7 +1,12 @@
-package Cheecken;
+package cheecken;
 
-/** Indicates that a deadline or event date/time is missing or invalid. */
+/**
+ * Indicates that a deadline or event date/time is missing or invalid.
+ */
 public class CheeckenDateTimeException extends RuntimeException {
+    /**
+     * Creates an exception with guidance for the invalid command.
+     */
     public CheeckenDateTimeException(String command) {
         super("No time how I set the task...\n" + (command.equals("event")
                 ? "(e.g. event buying her flowers /from 15/10/2025 0900 /to 15/10/2025 1100)"

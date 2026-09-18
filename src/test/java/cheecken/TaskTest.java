@@ -1,8 +1,12 @@
-package Cheecken;
+package cheecken;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 
+/**
+ * Checks task completion state and storage output.
+ */
 class TaskTest {
     @Test
     void newTask_isUnmarked() {

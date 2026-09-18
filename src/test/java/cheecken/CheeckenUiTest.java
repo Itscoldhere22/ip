@@ -1,15 +1,22 @@
-package Cheecken;
+package cheecken;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+/**
+ * Checks command output and persistence through application processes.
+ */
 class CheeckenUiTest {
+    /**
+     * Provides command inputs and expected output fragments.
+     */
     static Stream<Arguments> cases() {
         return Stream.of(
             Arguments.of("Exit with bye", "bye\n", "Bye. Hope to see you again soon!"),
@@ -18,12 +25,15 @@ class CheeckenUiTest {
             Arguments.of("Reject empty deadline", "deadline\n", "There's no task that is empty."),
             Arguments.of("Reject deadline without task", "deadline /by\n", "There's no task that is empty."),
             Arguments.of("Reject deadline without date", "deadline buy her flowers\n", "No time how I set the task..."),
-            Arguments.of("Reject deadline with empty date", "deadline buy her flowers /by\n", "No time how I set the task..."),
-            Arguments.of("Add deadline with 12-hour time", "deadline buy her flowers /by 15/10/2025 1800\n", "Oct 15 2025 6:00 PM"),
+            Arguments.of("Reject deadline with empty date", "deadline buy her flowers /by\n",
+                "No time how I set the task..."),
+            Arguments.of("Add deadline with 12-hour time", "deadline buy her flowers /by 15/10/2025 1800\n",
+                "Oct 15 2025 6:00 PM"),
             Arguments.of("Reject empty event", "event\n", "There's no task that is empty."),
             Arguments.of("Reject event without task", "event /from /to\n", "There's no task that is empty."),
             Arguments.of("Reject event without datetimes", "event love me\n", "No time how I set the task..."),
-            Arguments.of("Add event with 12-hour times", "event love me /from 15/10/2025 0900 /to 15/10/3000 1100\n", "9:00 AM"),
+            Arguments.of("Add event with 12-hour times", "event love me /from 15/10/2025 0900 /to 15/10/3000 1100\n",
+                "9:00 AM"),
             Arguments.of("Find tasks whose descriptions contain a keyword",
                 "todo read book\ndeadline return book /by 15/10/2025\nfind book\nbye\n",
                 "Here are the matching tasks in your list:\n1.[T][ ] read book\n2.[D][ ] return book"),
@@ -63,6 +73,9 @@ class CheeckenUiTest {
         assertTrue(Files.readString(dir.resolve("data/cheecken.txt")).contains("T | 0 | read book"));
     }
 
+    /**
+     * Runs commands in an isolated directory with optional persisted tasks.
+     */
     private static String run(String input, String persisted) throws Exception {
         Path dir = Files.createTempDirectory("cheecken-ui-");
         if (persisted != null) {
@@ -75,8 +88,11 @@ class CheeckenUiTest {
         return new String(process.getInputStream().readAllBytes());
     }
 
+    /**
+     * Builds an application process isolated from real user data.
+     */
     private static ProcessBuilder process(String input, Path dir) {
-        return new ProcessBuilder("java", "-cp", System.getProperty("java.class.path"), "Cheecken.Cheecken")
+        return new ProcessBuilder("java", "-cp", System.getProperty("java.class.path"), "cheecken.Cheecken")
                 .directory(dir.toFile()).redirectErrorStream(true).redirectInput(ProcessBuilder.Redirect.PIPE);
     }
 }

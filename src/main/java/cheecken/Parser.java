@@ -1,12 +1,19 @@
-package Cheecken;
+package cheecken;
 
-/** Converts raw user input into a recognized command. */
+/**
+ * Converts raw user input into a recognized command.
+ */
 public class Parser {
-    /** Normalizes null-safe raw console input. */
+    /**
+     * Normalizes null-safe raw console input.
+     */
     public String normalize(String rawInput) {
         return rawInput == null ? "" : rawInput.strip();
     }
 
+    /**
+     * Identifies the command represented by normalized input.
+     */
     public CommandType parseCommand(String input) {
         String keyword = input.split("\\s+", 2)[0];
         for (CommandType command : CommandType.values()) {
@@ -17,4 +24,3 @@ public class Parser {
         return null;
     }
 }
-    /** Identifies the command represented by normalized input. */

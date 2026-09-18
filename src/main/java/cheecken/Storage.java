@@ -1,4 +1,4 @@
-package Cheecken;
+package cheecken;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,15 +6,22 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Handles loading and saving tasks in the persistence file. */
-/** Loads and saves task records in the application's persistence file. */
+/**
+ * Loads and saves task records in the application's persistence file.
+ */
 public class Storage {
     private final Path file;
 
+    /**
+     * Creates storage backed by the supplied relative or absolute path.
+     */
     public Storage(String filePath) {
         this.file = Path.of(filePath);
     }
 
+    /**
+     * Saves all tasks, reporting I/O failures to the user.
+     */
     public void save(List<Task> tasks) {
         try {
             Files.createDirectories(file.getParent());
@@ -24,6 +31,9 @@ public class Storage {
         }
     }
 
+    /**
+     * Loads valid task records and skips malformed records.
+     */
     public List<Task> load() {
         List<Task> tasks = new ArrayList<>();
         if (!Files.exists(file)) {
@@ -37,11 +47,11 @@ public class Storage {
                         continue;
                     }
                     Task task = switch (fields[0]) {
-                    case "T" -> new Todo(fields[2]);
-                    case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
-                    case "E" -> fields.length >= 5
+                        case "T" -> new Todo(fields[2]);
+                        case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
+                        case "E" -> fields.length >= 5
                             ? new Event(fields[2], fields[3], fields[4]) : null;
-                    default -> null;
+                        default -> null;
                     };
                     if (task == null) {
                         continue;
@@ -60,6 +70,3 @@ public class Storage {
         return tasks;
     }
 }
-    /** Creates storage backed by the supplied relative or absolute path. */
-    /** Saves all tasks, reporting I/O failures to the user. */
-    /** Loads valid task records and skips malformed records. */
